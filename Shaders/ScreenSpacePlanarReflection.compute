@@ -1,0 +1,213 @@
+#pragma kernel Clear
+#pragma kernel SSPR
+#pragma kernel FillHole
+#pragma kernel FillHoleTemp
+#pragma kernel Blur
+
+#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
+
+SamplerState linearClampSampler;
+// input
+Texture2D<float> _CameraDepthTexture;
+Texture2D<float4> _CameraOpaqueTexture;
+float4 _SSPRParam1;
+float4 _SSPRParam2;
+float4x4 _ViewProjectionMatrix;
+float4x4 _InverseViewProjectionMatrix;
+// define
+#define _TextureSize float4(1.0 / _SSPRParam1.x, 1.0 / _SSPRParam1.y, _SSPRParam1.xy)
+#define _WaterHeight _SSPRParam1.z
+#define _SampleOffset _SSPRParam1.w
+// #define _StretchIntensity _SSPRParam2.x
+// #define _StretchThreshold _SSPRParam2.y
+// #define _CameraDirY _SSPRParam2.z
+#define _TopEdgeFade _SSPRParam2.x
+#define _TwoSidesEdgeFade _SSPRParam2.y
+#define _ZBufferParamsX 1.0 - _SSPRParam2.w / _SSPRParam2.z
+#define _ZBufferParamsY _SSPRParam2.w / _SSPRParam2.z
+
+#define MAXUINT 0xFFFFFFFF
+#define FillHoleDst 3
+// output
+RWStructuredBuffer<uint> _SSPRBuffer;
+uint GetIndex(uint2 id) { return id.y * _TextureSize.z + id.x; }
+#define INDEX(id) GetIndex(id)
+
+RWTexture2D<float4> _SSPRTextureResult;
+RWTexture2D<float4> _SSPRTextureTempResult;
+
+[numthreads(8, 8, 1)]
+void Clear (uint3 id : SV_DispatchThreadID)
+{
+#if UNITY_UV_STARTS_AT_TOP
+    _SSPRBuffer[INDEX(id.xy)] = MAXUINT;
+#else
+    _SSPRBuffer[INDEX(id.xy)] = 0;
+#endif
+}
+// 计算线性深度
+float Linear01Depth(float sampleDepth)
+{
+    return 1.0 / (_ZBufferParamsX * sampleDepth + _ZBufferParamsY);
+}
+// 获得世界坐标
+float3 GetWorldPositionFromDepth(float depth, float2 uv)
+{
+#if defined(SHADER_API_GLCORE) || defined (SHADER_API_GLES) || defined (SHADER_API_GLES3)
+    depth = depth * 2 - 1;
+#endif
+#if UNITY_UV_STARTS_AT_TOP
+    uv.y = 1 - uv.y;
+#endif
+    float4 positionCS = float4(uv * 2.0 - 1.0, depth, 1);
+    float4 positionWS = mul(_InverseViewProjectionMatrix, positionCS);
+    positionWS.xyz /= positionWS.w;
+    return positionWS.xyz;
+}
+// 编码
+uint Encode(uint2 id)
+{
+    return id.y << 16 | id.x;
+}
+// 解码
+uint2 Decode(uint encode)
+{
+    return uint2(encode & 0xFFFF, encode >> 16);
+}
+
+[numthreads(8, 8, 1)]
+void SSPR (uint3 id : SV_DispatchThreadID)
+{
+    float2 screenUV = (id.xy + 0.5) * _TextureSize.xy;
+    float sampleDepth = _CameraDepthTexture[id.xy * _SampleOffset];
+    if (_SampleOffset != 1)  
+    {
+        // 筛选出4个深度之间的关系
+        uint offset = _SampleOffset / 2;
+        float sampleDepth01 = _CameraDepthTexture[id.xy * _SampleOffset + uint2(0, offset)];
+        float sampleDepth10 = _CameraDepthTexture[id.xy * _SampleOffset + uint2(offset, 0)];
+        float sampleDepth11 = _CameraDepthTexture[id.xy * _SampleOffset + uint2(offset, offset)];
+        sampleDepth = abs(sampleDepth - sampleDepth11) < 0.001 ? (sampleDepth + sampleDepth11) / 2 : min(sampleDepth, sampleDepth11);
+        sampleDepth01 = abs(sampleDepth01 - sampleDepth10) < 0.001 ? (sampleDepth01 + sampleDepth10) / 2 : min(sampleDepth01, sampleDepth10);
+        sampleDepth = abs(sampleDepth - sampleDepth01) < 0.001 ? (sampleDepth + sampleDepth01) / 2 : min(sampleDepth, sampleDepth01);
+    }
+    if (Linear01Depth(sampleDepth, _ZBufferParams) > 0.90) return;
+    
+    float3 positionWS = GetWorldPositionFromDepth(sampleDepth, screenUV);
+    // _SSPRTextureResult[id.xy] = float4(positionWS, 1);
+    if (positionWS.y > _WaterHeight)
+    {
+        float4 positionRWS = float4(positionWS.x, 2 * _WaterHeight - positionWS.y, positionWS.z, 1);
+        float4 positionRCS = mul(_ViewProjectionMatrix, positionRWS);
+        float4 positionSS = positionRCS / positionRCS.w;
+        float2 reflectUV = positionSS.xy * 0.5 + 0.5;
+#if UNITY_UV_STARTS_AT_TOP
+        reflectUV.y = 1 - reflectUV.y;
+#endif
+        // 伸展uv
+        // reflectUV.x = reflectUV.x * 2.0 - 1.0;
+	    // float HeightStretch = positionWS.y - _WaterHeight;
+        // float AngleStretch = max(0, _CameraDirY);
+        // float ScreenStretch = saturate(abs(reflectUV.x) - _StretchThreshold);
+        // reflectUV.x *= 1 + HeightStretch * AngleStretch * ScreenStretch * _StretchIntensity;
+	    // reflectUV.x = reflectUV.x * 0.5 + 0.5;
+        // limit min value
+        uint2 reflectID = uint2(reflectUV * _TextureSize.zw);
+        uint encodeID = Encode(id.xy);
+#if UNITY_UV_STARTS_AT_TOP
+        InterlockedMin(_SSPRBuffer[INDEX(reflectID)], encodeID);
+#else
+        InterlockedMax(_SSPRBuffer[INDEX(reflectID)], encodeID);
+#endif
+    }
+}
+// 获得周围的坐标
+uint GetNearbyBuffer(uint2 id, int2 offset)
+{
+    uint2 nearbyID = id + offset;
+    nearbyID.x = clamp(nearbyID.x, 0, _TextureSize.z);
+    nearbyID.y = clamp(nearbyID.y, 0, _TextureSize.w);
+    return _SSPRBuffer[INDEX(nearbyID)];
+}
+// 填洞
+float4 FillHole4Sampler(uint3 id)
+{
+    uint encodeCurrentID = _SSPRBuffer[INDEX(id.xy)];
+    uint upperEncodeID = GetNearbyBuffer(id.xy, int2(0, 1));
+    uint underEncodeID = GetNearbyBuffer(id.xy, int2(0, -1));
+    uint leftEncodeID = GetNearbyBuffer(id.xy, int2(-1, 0));
+    uint rightEncodeID = GetNearbyBuffer(id.xy, int2(1, 0));
+#if UNITY_UV_STARTS_AT_TOP
+    uint targetEncodeID = min(min(upperEncodeID, underEncodeID), min(leftEncodeID, rightEncodeID));
+#else
+    uint targetEncodeID = max(max(upperEncodeID, underEncodeID), max(leftEncodeID, rightEncodeID));
+#endif
+
+    uint2 decodeCurrentID = Decode(encodeCurrentID);
+    uint2 decodeTargetID = Decode(targetEncodeID);
+    
+    bool isCanFillHole = true;
+#if UNITY_UV_STARTS_AT_TOP
+    if (encodeCurrentID != MAXUINT)
+#else
+    if (encodeCurrentID != 0)
+#endif
+    {
+        uint2 offset = decodeTargetID - decodeCurrentID;
+        isCanFillHole = dot(offset, offset) > FillHoleDst * FillHoleDst;
+    }
+#if UNITY_UV_STARTS_AT_TOP
+    if (isCanFillHole && targetEncodeID != MAXUINT)
+#else
+    if (isCanFillHole && targetEncodeID != 0)
+#endif
+    {
+        decodeCurrentID = decodeTargetID;
+        encodeCurrentID = targetEncodeID;
+    }
+
+    float2 uv = (decodeCurrentID + 0.5) * _TextureSize.xy;
+    float4 reflectionColor = _CameraOpaqueTexture.SampleLevel(linearClampSampler, uv, 0);
+    float alpha = smoothstep(1.0001, _TopEdgeFade, uv.y) * smoothstep(1.0001, _TwoSidesEdgeFade, abs(uv.x * 2 - 1));
+    return float4(reflectionColor.rgb * alpha, alpha);
+}
+
+// FileHole
+[numthreads(8, 8, 1)]
+void FillHole (uint3 id : SV_DispatchThreadID)
+{
+#if UNITY_UV_STARTS_AT_TOP
+    _SSPRTextureResult[id.xy] = FillHole4Sampler(id);
+#else
+    _SSPRTextureResult[id.xy] = FillHole4Sampler(id);
+#endif
+}
+
+[numthreads(8, 8, 1)]
+void FillHoleTemp (uint3 id : SV_DispatchThreadID)
+{
+#if UNITY_UV_STARTS_AT_TOP
+    _SSPRTextureTempResult[id.xy] = FillHole4Sampler(id);
+#else
+    _SSPRTextureTempResult[id.xy] = FillHole4Sampler(id);
+#endif
+}
+
+[numthreads(8, 8, 1)]
+void Blur (uint3 id : SV_DispatchThreadID)
+{
+    float4 centerColor = _SSPRTextureTempResult[id.xy];
+    float4 result = 0;
+    float weights[8] = { 0.0625, 0.125, 0.0625, 0.125, 0.125 ,0.0625, 0.125, 0.0625 };
+	uint2 offsets[8] = { uint2(-1,1), uint2(0,1), uint2(1,1), uint2(-1,0), uint2(1,0), uint2(-1,-1), uint2(0,-1), uint2(1,-1) };
+    for (int i = 0; i < 8; i++)
+    {
+        uint2 offset = id.xy + offsets[i];
+        int indexX = clamp(offset.x, 0, _TextureSize.z);
+        int indexY = clamp(offset.y, 0, _TextureSize.w);
+        result += _SSPRTextureTempResult[uint2(indexX, indexY)] * weights[i];
+    }
+    if (centerColor.a == 0 && result.a == 0.75) result /= result.a;
+    else result += centerColor * 0.25;
+    _SSPRTextureResult[id.xy] = result;
+}

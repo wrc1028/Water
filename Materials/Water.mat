@@ -1,0 +1,140 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!21 &2100000
+Material:
+  serializedVersion: 6
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: Water
+  m_Shader: {fileID: 4800000, guid: 69eaebb6d3453854f9b1609888087ab1, type: 3}
+  m_ShaderKeywords: _QUALITY_GRADE_HIGH
+  m_LightmapFlags: 4
+  m_EnableInstancingVariants: 0
+  m_DoubleSidedGI: 0
+  m_CustomRenderQueue: -1
+  stringTagMap: {}
+  disabledShaderPasses: []
+  m_SavedProperties:
+    serializedVersion: 3
+    m_TexEnvs:
+    - _BaseMap:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _BumpMap:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _CausticsTex:
+        m_Texture: {fileID: 2800000, guid: 93817aaa48a405944ba86842beeb979b, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _EmissionMap:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _EnvCubeMap:
+        m_Texture: {fileID: 8900000, guid: af0cff541baddf846ac5bc7424352c38, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _FoamTex:
+        m_Texture: {fileID: 2800000, guid: 96f6ef5d86278ee46987fcb99469d36e, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _MainTex:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _MetallicGlossMap:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _OcclusionMap:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _SpecGlossMap:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _WaveBaseNormal:
+        m_Texture: {fileID: 2800000, guid: bc171920e1aaba04387c1b2a99860abc, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    m_Floats:
+    - _AdditionalNormalFlowX: 0.557
+    - _AdditionalNormalFlowY: -0.644
+    - _AdditionalNormalSize: 12
+    - _AdditionalNormalStrength: 0.35
+    - _AlphaClip: 0
+    - _BaseNormalFlowX: -0.605
+    - _BaseNormalFlowY: 0.555
+    - _BaseNormalSize: 3
+    - _BaseNormalStrength: 0.37
+    - _Blend: 0
+    - _BumpScale: 1
+    - _CausticsDistorted: 0.29
+    - _CausticsIntensity: 0.431
+    - _CausticsMaxVisibleDepth: 4.01
+    - _CausticsSize: 3.85
+    - _Cull: 2
+    - _Cutoff: 0.5
+    - _DiffuseIntensity: 0.29
+    - _DstBlend: 0
+    - _EnvironmentReflections: 1
+    - _FoamDistorted: 0.371
+    - _FoamIntensity: 0.369
+    - _FoamSize: 3
+    - _FoamWidth: 10
+    - _FresnelFactor: 6.77
+    - _GlossMapScale: 0
+    - _Glossiness: 0
+    - _GlossyReflections: 0
+    - _MaxVisibleDepth: 5.32
+    - _Metallic: 0
+    - _NormalAttenDst: 70
+    - _NormalDistorted: 3
+    - _OcclusionStrength: 1
+    - _QueueOffset: 0
+    - _ReceiveShadows: 1
+    - _ReflectionDistorted: 2
+    - _ReflectionIntensity: 0.8
+    - _RefractionIntensity: 0.8
+    - _ScreenDistorted: 3
+    - _ShallowDepthAdjust: 0.476
+    - _Smoothness: 0.5
+    - _SmoothnessTextureChannel: 0
+    - _SpecularHighlights: 1
+    - _SrcBlend: 1
+    - _Surface: 0
+    - _WaveAmplitude: 0.3
+    - _WaveCount: 3
+    - _WaveFlowSpeed: 1
+    - _WaveFoamIntensity: 0.1
+    - _WaveFoamNormalStrength: 27.61
+    - _WaveLength: 1
+    - _WaveRandomSeed: 43758.547
+    - _WorkflowMode: 1
+    - _ZWrite: 1
+    m_Colors:
+    - _BaseColor: {r: 1, g: 1, b: 1, a: 1}
+    - _Color: {r: 1, g: 1, b: 1, a: 1}
+    - _DepthColor: {r: 0.001876251, g: 0, b: 0.31132078, a: 1}
+    - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
+    - _ShallowColor: {r: 0.40392157, g: 0.7058824, b: 0.5967127, a: 1}
+    - _SpecColor: {r: 0.2, g: 0.2, b: 0.2, a: 1}
+--- !u!114 &3394299672350323043
+MonoBehaviour:
+  m_ObjectHideFlags: 11
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d0353a89b1f911e48b9e16bdc9f2e058, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  version: 2
