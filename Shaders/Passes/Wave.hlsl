@@ -3,10 +3,11 @@
 // 目前打算计算两种顶点波浪Sinusoids Wave和Gerstner Wave
 // #pragma shader_feature _ SINUSOIDS_WAVE GERSTNER_WAVE
 uniform uint _WaveCount;
-// The Sum of Sines Approximation
 
-// 最多10个Sin波叠加在一起 amplitude waveLength flowSpeed flowDirection
+// 最多10个波叠加在一起 amplitude waveLength flowSpeed flowDirection
 // 其中 flowDirection 通过一个一维向量算出来的 sincos
+
+// The Sum of Sines Approximation
 half4 _WaveData[10];
 
 float4 SinesWave(float amplitude, float waveLength, float flowSpeed, float2 flowDirection, float3 positionWS)
@@ -32,8 +33,16 @@ void SinesWaveAnimation(inout float3 positionWS, inout float3 normalWS)
         normals += result.xyz;
         offsetY += result.w;
     }
-    normalWS = normalize(normals);
+    // TODO: 混合
+    normalWS = normalize(normalWS + normals);
     positionWS.y += (offsetY * rcp(_WaveCount));
+}
+
+// TODO: The Sum of Gerstner Approximation
+void GerstnerWaveAnimation(inout float3 positionWS, inout float3 normalWS)
+{
+    normalWS = normalize(normalWS);
+    positionWS.y += 0;
 }
 
 #endif

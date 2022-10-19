@@ -8,9 +8,10 @@ namespace WaterSystemEditor
     public class WaterEditor : Editor
     {
         private bool waveSettingsFoldout;
-        public override void OnInspectorGUI() 
+        public override void OnInspectorGUI()
         {
             base.OnInspectorGUI();
+            serializedObject.Update();
         }
     }
 }

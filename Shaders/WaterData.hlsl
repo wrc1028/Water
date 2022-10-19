@@ -1,9 +1,4 @@
 #ifndef WATER_DATA_INCLUDED
 #define WATER_DATA_INCLUDED
-// 存放一些计算水所需要的数据, 以及初始化这些数据
-struct WaterData
-{
-    float3 positionWS;
-    float3 normalWS;
-};
+// 采样细节法线: 1、使用UV; 2、使用世界坐标位置, 如果使用世界坐标, 如何转换法线空间;
 #endif
