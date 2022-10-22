@@ -125,8 +125,8 @@ void SSPR (uint3 id : SV_DispatchThreadID)
 uint GetNearbyBuffer(uint2 id, int2 offset)
 {
     uint2 nearbyID = id + offset;
-    nearbyID.x = clamp(nearbyID.x, 0, _TextureSize.z);
-    nearbyID.y = clamp(nearbyID.y, 0, _TextureSize.w);
+    nearbyID.x = clamp(nearbyID.x, 0, _TextureSize.z - 1);
+    nearbyID.y = clamp(nearbyID.y, 0, _TextureSize.w - 1);
     return _SSPRBuffer[INDEX(nearbyID)];
 }
 // 填洞

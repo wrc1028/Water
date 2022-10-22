@@ -9,7 +9,7 @@ Material:
   m_PrefabAsset: {fileID: 0}
   m_Name: Water
   m_Shader: {fileID: 4800000, guid: 69eaebb6d3453854f9b1609888087ab1, type: 3}
-  m_ShaderKeywords: _QUALITY_GRADE_HIGH
+  m_ShaderKeywords: GERSTNER_WAVE _QUALITY_GRADE_HIGH
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
   m_DoubleSidedGI: 0
@@ -72,15 +72,15 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     m_Floats:
-    - _AdditionalNormalFlowX: 0.211
-    - _AdditionalNormalFlowY: -0.179
+    - _AdditionalNormalFlowX: 0.081
+    - _AdditionalNormalFlowY: -0.393
     - _AdditionalNormalSize: 12
-    - _AdditionalNormalStrength: 0.26
+    - _AdditionalNormalStrength: 0.48
     - _AlphaClip: 0
-    - _BaseNormalFlowX: -0.309
-    - _BaseNormalFlowY: 0.127
+    - _BaseNormalFlowX: -0.455
+    - _BaseNormalFlowY: 0.272
     - _BaseNormalSize: 6
-    - _BaseNormalStrength: 0.23
+    - _BaseNormalStrength: 0.34
     - _Blend: 0
     - _BumpScale: 1
     - _CausticsDistorted: 0.29
@@ -89,7 +89,7 @@ Material:
     - _CausticsSize: 3.85
     - _Cull: 2
     - _Cutoff: 0.5
-    - _DiffuseIntensity: 0.184
+    - _DiffuseIntensity: 0.109
     - _DstBlend: 0
     - _EnvironmentReflections: 1
     - _FoamDistorted: 0.371
@@ -100,15 +100,16 @@ Material:
     - _GlossMapScale: 0
     - _Glossiness: 0
     - _GlossyReflections: 0
-    - _MaxVisibleDepth: 4.47
+    - _MaxVisibleDepth: 3.85
     - _Metallic: 0
     - _NormalAttenDst: 70
-    - _NormalDistorted: 0.13
+    - _NormalDistorted: 10
     - _OcclusionStrength: 1
     - _QueueOffset: 0
     - _ReceiveShadows: 1
     - _ReflectionDistorted: 2.57
-    - _ReflectionIntensity: 0.806
+    - _ReflectionIntensity: 0.991
+    - _RefractionDistorted: 5.13
     - _RefractionIntensity: 0.813
     - _ScreenDistorted: 4.79
     - _ShallowDepthAdjust: 0.338
@@ -129,9 +130,9 @@ Material:
     m_Colors:
     - _BaseColor: {r: 1, g: 1, b: 1, a: 1}
     - _Color: {r: 1, g: 1, b: 1, a: 1}
-    - _DepthColor: {r: 0, g: 0, b: 0, a: 1}
+    - _DepthColor: {r: 0.11494303, g: 0.29472578, b: 0.5943396, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
-    - _ShallowColor: {r: 0, g: 0.78431374, b: 0.6901961, a: 1}
+    - _ShallowColor: {r: 0, g: 0.8018868, b: 0.70566046, a: 1}
     - _SpecColor: {r: 0.2, g: 0.2, b: 0.2, a: 1}
 --- !u!114 &3394299672350323043
 MonoBehaviour:

@@ -1,30 +1,9 @@
-#ifndef UNIVERSAL_WATER_PASS_INCLUDED
-#define UNIVERSAL_WATER_PASS_INCLUDED
+#ifndef WATER_PASS_INCLUDED
+#define WATER_PASS_INCLUDED
 
-#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Lighting.hlsl"
-#include "Passes/Common.hlsl"
+#if defined(SINUSOIDS_WAVE) || defined(GERSTNER_WAVE)
 #include "Passes/Wave.hlsl"
-
-struct Attributes
-{
-    float4 positionOS   : POSITION;
-    float3 normalOS     : NORMAL;
-    float4 tangentOS    : TANGENT;
-    float2 texcoord     : TEXCOORD0;
-    UNITY_VERTEX_INPUT_INSTANCE_ID
-};
-
-struct Varyings
-{
-    float4 positionCS   : SV_POSITION;
-    float4 baseUV       : TEXCOORD0;
-    float4 positionSS   : TEXCOORD1;
-    float4 TtoW01       : TEXCOORD2;
-    float4 TtoW02       : TEXCOORD3;
-    float4 TtoW03       : TEXCOORD4;
-    UNITY_VERTEX_INPUT_INSTANCE_ID
-    UNITY_VERTEX_OUTPUT_STEREO
-};
+#endif
 
 Varyings WaterVertex(Attributes input)
 {
@@ -43,6 +22,7 @@ Varyings WaterVertex(Attributes input)
     GerstnerWaveAnimation(positionWS, normalWS);
 #endif
     float3 binormalWS = cross(normalWS, tangentWS) * input.tangentOS.w;
+    // TODO: 分为UV采样和positionWS采样, 这两种采样所用到的TBN是不一样的, 需要单独考虑
     output.baseUV.xy = TransformWaterTex(input.texcoord, _BaseNormalSize, float2(_BaseNormalFlowX, _BaseNormalFlowY));
     output.baseUV.zw = TransformWaterTex(input.texcoord, _AdditionalNormalSize, float2(_AdditionalNormalFlowX, _AdditionalNormalFlowY));
     output.positionCS = TransformWorldToHClip(positionWS);
@@ -57,18 +37,20 @@ Varyings WaterVertex(Attributes input)
 half4 WaterFragment(Varyings input) : SV_Target
 {
     UNITY_SETUP_INSTANCE_ID(input);
+    WaterInputDatas inputDatas = (WaterInputDatas)0;
+    InitializeWaterInputData(input, inputDatas);
+
     half2 screenUV = input.positionSS.xy / input.positionSS.w;
     float3 positionWS = float3(input.TtoW01.w, input.TtoW02.w, input.TtoW03.w);
     half3 viewDirWS = normalize(_WorldSpaceCameraPos.xyz - positionWS);
     half3x3 TBNMatrxi = half3x3(normalize(input.TtoW01.xyz), normalize(input.TtoW02.xyz), normalize(input.TtoW03.xyz));
     float4 shadowCoord = TransformWorldToShadowCoord(positionWS);
     Light mainLight = GetMainLight(shadowCoord);
-
     // Detail normal : sample use uv; how to sample it by position
-    input.baseUV.xy = TransformWaterTex(positionWS.zx / 100, _BaseNormalSize, float2(_BaseNormalFlowX, _BaseNormalFlowY));
-    input.baseUV.zw = TransformWaterTex(positionWS.zx / 100, _AdditionalNormalSize, float2(_AdditionalNormalFlowX, _AdditionalNormalFlowY));
+    // input.baseUV.xy = TransformWaterTex(positionWS.zx / 100, _BaseNormalSize, float2(_BaseNormalFlowX, _BaseNormalFlowY));
+    // input.baseUV.zw = TransformWaterTex(positionWS.zx / 100, _AdditionalNormalSize, float2(_AdditionalNormalFlowX, _AdditionalNormalFlowY));
     half3 waveAdditionalNormalTS = UnpackNormalScale(SAMPLE_TEXTURE2D(_WaveDetailNormal, sampler_WaveDetailNormal, input.baseUV.zw), _AdditionalNormalStrength);
-    half2 baseNormalUV = input.baseUV.xy + waveAdditionalNormalTS.xy * _NormalDistorted; // TODO: 验证扭曲
+    half2 baseNormalUV = input.baseUV.xy + waveAdditionalNormalTS.xy * _NormalDistorted * 0.01; // TODO: 验证扭曲
     half3 normalTS = UnpackNormalScale(SAMPLE_TEXTURE2D(_WaveDetailNormal, sampler_WaveDetailNormal, baseNormalUV), _BaseNormalStrength);
     normalTS = WhiteoutNormalBlend(normalTS, waveAdditionalNormalTS);
 
@@ -78,11 +60,10 @@ half4 WaterFragment(Varyings input) : SV_Target
     normalWS = normalize(lerp(normalWS, half3(0, 1, 0), min(0.9, normalAtten)));
     /// ============= Shadering =============
     // depth
-    half2 screenEdgeMask = 1 - Pow6(screenUV * 2 - 1);
     // 场景深度和水深度相减，让扰动随着深度变化
     float rawDepth = SAMPLE_DEPTH_TEXTURE(_CameraDepthTexture, sampler_CameraDepthTexture_point_clamp, screenUV);
     float eyeToOpaqueDepth = LinearEyeDepth(rawDepth, _ZBufferParams);
-    half2 screenDistortion = normalWS.zx * _ScreenDistorted * 0.01 * saturate(eyeToOpaqueDepth - eyeToWaterDepth) * screenEdgeMask;
+    half2 screenDistortion = normalWS.zx * _RefractionDistorted * 0.01 * saturate(eyeToOpaqueDepth - eyeToWaterDepth);
     half rawDepthDistortion = SAMPLE_DEPTH_TEXTURE(_CameraDepthTexture, sampler_CameraDepthTexture_point_clamp, screenUV + screenDistortion);
     float3 positionSWS = GetWorldPositionFromDepth(screenUV, rawDepthDistortion);
     screenDistortion *= positionSWS.y > positionWS.y ? 0 : 1;
@@ -118,7 +99,7 @@ half4 WaterFragment(Varyings input) : SV_Target
     half4 encodedIrradiance = SAMPLE_TEXTURECUBE_LOD(_EnvCubeMap, sampler_EnvCubeMap, viewReflDirWS, 0);
     reflectColor = DecodeHDREnvironment(encodedIrradiance, _EnvCubeMap_HDR);
     half4 ssprColor = 0;
-    half2 ssprDistortion = normalWS.zx * _ReflectionDistorted * screenEdgeMask * saturate(eyeLinearWaterDepth) * 0.02;
+    half2 ssprDistortion = normalWS.zx * _ReflectionDistorted * saturate(eyeLinearWaterDepth) * 0.02;
     ssprColor = SAMPLE_TEXTURE2D(_SSPRTextureResult, sampler_SSPRTextureResult_linear_clamp, screenUV + ssprDistortion);
     reflectColor = lerp(reflectColor, ssprColor.rgb, ssprColor.a);
     finalColor += lerp(refractColor, reflectColor * _ReflectionIntensity, saturate(fresnelValue + 0.05));

@@ -1,0 +1,34 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 0}
+  m_Name: WaveSettingsDatas
+  m_EditorClassIdentifier: WaterSystem:WaterSystem:WaveSettingsData
+  isFoldout: 1
+  waveType: 1
+  waveSharp: 1.481
+  waveCount: 4
+  waveAmplitude: {x: 0.014033124, y: 0.12629804}
+  waveLength: {x: 0.48582247, y: 1.447589}
+  waveSpeed: {x: 0.37190604, y: 1.6337681}
+  waveDirection: 8
+  randomSeed: 156475262
+  waveData:
+  - {x: 0.06797293, y: 0.53239036, z: 1.5904617, w: -16.552114}
+  - {x: 0.08813868, y: 1.1157632, z: 1.0938195, w: -16.870424}
+  - {x: 0.06027013, y: 0.6591421, z: 0.6587779, w: 31.512678}
+  - {x: 0.08103409, y: 0.91024065, z: 1.1723902, w: 4.1380286}
+  - {x: 0, y: 0, z: 0, w: 0}
+  - {x: 0, y: 0, z: 0, w: 0}
+  - {x: 0, y: 0, z: 0, w: 0}
+  - {x: 0, y: 0, z: 0, w: 0}
+  - {x: 0, y: 0, z: 0, w: 0}
+  - {x: 0, y: 0, z: 0, w: 0}

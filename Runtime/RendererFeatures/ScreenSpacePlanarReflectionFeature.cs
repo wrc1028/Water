@@ -19,7 +19,7 @@ namespace WaterSystem
         [Tooltip("两侧的边缘过度")]
         [Range(0.0f, 1.0f)]
         [SerializeField] internal float twoSidesEdgeFade = 0.7f;
-        [SerializeField] internal bool enableBlur = false;
+        internal bool enableBlur = false;
     }
     public class ScreenSpacePlanarReflectionFeature : ScriptableRendererFeature
     {

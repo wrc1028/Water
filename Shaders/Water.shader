@@ -22,7 +22,7 @@ Shader "Custom/Water"
         _MaxVisibleDepth ("Maximum Visible Depth", Range(0.05, 20)) = 3
         _DiffuseIntensity ("Diffuse Intensity", Range(0, 0.5)) = 0.08
         _RefractionIntensity ("Refraction Intensity", Range(0, 2)) = 0.8
-        _ScreenDistorted ("Refraction Distorted", Range(0, 10)) = 3
+        _RefractionDistorted ("Refraction Distorted", Range(0, 10)) = 3
 
         [Header(Reflection)]
         _EnvCubeMap ("Environment Cube Map", Cube) = "SkyBox" {}
@@ -65,14 +65,15 @@ Shader "Custom/Water"
             #pragma multi_compile _ _MAIN_LIGHT_SHADOWS
             #pragma multi_compile _ _MAIN_LIGHT_SHADOWS_CASCADE
 
-            //
+            // ====== shader feature ======
             #pragma shader_feature _ SINUSOIDS_WAVE GERSTNER_WAVE
-            
-            #define SINUSOIDS_WAVE
+
+
             #pragma vertex WaterVertex
             #pragma fragment WaterFragment
 
             #include "WaterInput.hlsl"
+            #include "WaterData.hlsl"
             #include "WaterPass.hlsl"
 
             ENDHLSL

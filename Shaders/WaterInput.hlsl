@@ -1,6 +1,9 @@
 #ifndef UNIVERSAL_WATER_INPUT_INCLUDED
 #define UNIVERSAL_WATER_INPUT_INCLUDED
+
 #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
+#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Lighting.hlsl"
+#include "Passes/Common.hlsl"
 
 TEXTURE2D(_CameraDepthTexture);     SAMPLER(sampler_CameraDepthTexture_point_clamp);
 TEXTURE2D(_CameraOpaqueTexture);    SAMPLER(sampler_CameraOpaqueTexture_linear_clamp);
@@ -29,7 +32,7 @@ float _AdditionalNormalFlowY;
 float _ShallowDepthAdjust;
 float _MaxVisibleDepth;
 float _DiffuseIntensity;
-float _ScreenDistorted;
+float _RefractionDistorted;
 float _RefractionIntensity;
 float _FresnelFactor;
 float _ReflectionDistorted;

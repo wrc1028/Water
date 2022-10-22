@@ -8,13 +8,13 @@ namespace WaterSystem
     {
         private const string k_ProfilerTag = "ScreenSpacePlanarReflection";
         private ProfilingSampler m_ProfilerSampler = new ProfilingSampler(k_ProfilerTag);
-        private const string k_SSPRParam1Id = "_SSPRParam1";
-        private const string k_SSPRParam2Id = "_SSPRParam2";
-        private const string k_ViewProjectionMatrixId = "_ViewProjectionMatrix";
-        private const string k_InverseViewProjectionMatrixId = "_InverseViewProjectionMatrix";
-        private const string k_SSPRBuffer = "_SSPRBuffer";
-        private const string k_SSPRTextureResult = "_SSPRTextureResult";
-        private const string k_SSPRTextureTempResult = "_SSPRTextureTempResult";
+        private static readonly int s_SSPRParam1Id = Shader.PropertyToID("_SSPRParam1");
+        private static readonly int s_SSPRParam2Id = Shader.PropertyToID("_SSPRParam2");
+        private static readonly int s_ViewProjectionMatrixId = Shader.PropertyToID("_ViewProjectionMatrix");
+        private static readonly int s_InverseViewProjectionMatrixId = Shader.PropertyToID("_InverseViewProjectionMatrix");
+        private static readonly int s_SSPRBuffer = Shader.PropertyToID("_SSPRBuffer");
+        private static readonly string s_SSPRTextureResult = "_SSPRTextureResult";
+        private static readonly string s_SSPRTextureTempResult = "_SSPRTextureTempResult";
         private ComputeBuffer m_SSPRBuffer;
         private RenderTextureDescriptor m_SSPRTextureResultDescriptor;
         private RenderTargetHandle m_SSPRTextureResultHandle;
@@ -60,8 +60,8 @@ namespace WaterSystem
             m_SSPRTextureResultDescriptor = new RenderTextureDescriptor(width, height, RenderTextureFormat.ARGB32);
             // m_SSPRTextureResultDescriptor.sRGB = true;
             m_SSPRTextureResultDescriptor.enableRandomWrite = true;
-            m_SSPRTextureResultHandle.Init(k_SSPRTextureResult);
-            m_SSPRTextureTempResultHandle.Init(k_SSPRTextureTempResult);
+            m_SSPRTextureResultHandle.Init(s_SSPRTextureResult);
+            m_SSPRTextureTempResultHandle.Init(s_SSPRTextureTempResult);
             cmd.GetTemporaryRT(m_SSPRTextureResultHandle.id, m_SSPRTextureResultDescriptor, FilterMode.Bilinear);
             cmd.GetTemporaryRT(m_SSPRTextureTempResultHandle.id, m_SSPRTextureResultDescriptor, FilterMode.Bilinear);
         }
@@ -72,21 +72,23 @@ namespace WaterSystem
             CommandBuffer cmd = CommandBufferPool.Get(k_ProfilerTag);
             using (new ProfilingScope(cmd, m_ProfilerSampler))
             {
-                cmd.SetComputeVectorParam(m_Settings.computeShader, k_SSPRParam1Id, m_DispatchDatas.param01);
-                cmd.SetComputeVectorParam(m_Settings.computeShader, k_SSPRParam2Id, m_DispatchDatas.param02);
-                cmd.SetComputeMatrixParam(m_Settings.computeShader, k_ViewProjectionMatrixId, m_DispatchDatas.viewProjectionMatrixId);
-                cmd.SetComputeMatrixParam(m_Settings.computeShader, k_InverseViewProjectionMatrixId, m_DispatchDatas.viewProjectionMatrixId.inverse);
+                context.ExecuteCommandBuffer(cmd);
+                cmd.Clear();
+                cmd.SetComputeVectorParam(m_Settings.computeShader, s_SSPRParam1Id, m_DispatchDatas.param01);
+                cmd.SetComputeVectorParam(m_Settings.computeShader, s_SSPRParam2Id, m_DispatchDatas.param02);
+                cmd.SetComputeMatrixParam(m_Settings.computeShader, s_ViewProjectionMatrixId, m_DispatchDatas.viewProjectionMatrixId);
+                cmd.SetComputeMatrixParam(m_Settings.computeShader, s_InverseViewProjectionMatrixId, m_DispatchDatas.viewProjectionMatrixId.inverse);
                 // Clear
-                cmd.SetComputeBufferParam(m_Settings.computeShader, m_DispatchDatas.ClearKernelHandle, k_SSPRBuffer, m_SSPRBuffer);
+                cmd.SetComputeBufferParam(m_Settings.computeShader, m_DispatchDatas.ClearKernelHandle, s_SSPRBuffer, m_SSPRBuffer);
                 cmd.DispatchCompute(m_Settings.computeShader, m_DispatchDatas.ClearKernelHandle, m_DispatchDatas.threadGroupsX, m_DispatchDatas.threadGroupsY, 1);
                 // SSPR
-                cmd.SetComputeBufferParam(m_Settings.computeShader, m_DispatchDatas.SSPRKernelHandle, k_SSPRBuffer, m_SSPRBuffer);
+                cmd.SetComputeBufferParam(m_Settings.computeShader, m_DispatchDatas.SSPRKernelHandle, s_SSPRBuffer, m_SSPRBuffer);
                 // cmd.SetComputeTextureParam(m_Settings.computeShader, m_DispatchDatas.SSPRKernelHandle, m_SSPRTextureResultHandle.id, m_SSPRTextureResultHandle.Identifier());
                 cmd.DispatchCompute(m_Settings.computeShader, m_DispatchDatas.SSPRKernelHandle, m_DispatchDatas.threadGroupsX, m_DispatchDatas.threadGroupsY, 1);
                 // FillHole
                 if (m_Settings.enableBlur)
                 {
-                    cmd.SetComputeBufferParam(m_Settings.computeShader, m_DispatchDatas.FillHoleTempKernelHandle, k_SSPRBuffer, m_SSPRBuffer);
+                    cmd.SetComputeBufferParam(m_Settings.computeShader, m_DispatchDatas.FillHoleTempKernelHandle, s_SSPRBuffer, m_SSPRBuffer);
                     cmd.SetComputeTextureParam(m_Settings.computeShader, m_DispatchDatas.FillHoleTempKernelHandle, m_SSPRTextureTempResultHandle.id, m_SSPRTextureTempResultHandle.Identifier());
                     cmd.DispatchCompute(m_Settings.computeShader, m_DispatchDatas.FillHoleTempKernelHandle, m_DispatchDatas.threadGroupsX, m_DispatchDatas.threadGroupsY, 1);
                     // Blur
@@ -96,7 +98,7 @@ namespace WaterSystem
                 }
                 else
                 {
-                    cmd.SetComputeBufferParam(m_Settings.computeShader, m_DispatchDatas.FillHoleKernelHandle, k_SSPRBuffer, m_SSPRBuffer);
+                    cmd.SetComputeBufferParam(m_Settings.computeShader, m_DispatchDatas.FillHoleKernelHandle, s_SSPRBuffer, m_SSPRBuffer);
                     cmd.SetComputeTextureParam(m_Settings.computeShader, m_DispatchDatas.FillHoleKernelHandle, m_SSPRTextureResultHandle.id, m_SSPRTextureResultHandle.Identifier());
                     cmd.DispatchCompute(m_Settings.computeShader, m_DispatchDatas.FillHoleKernelHandle, m_DispatchDatas.threadGroupsX, m_DispatchDatas.threadGroupsY, 1);
                 }
@@ -107,7 +109,7 @@ namespace WaterSystem
         public override void FrameCleanup(CommandBuffer cmd)
         {
             cmd.ReleaseTemporaryRT(m_SSPRTextureResultHandle.id);
-            if (m_Settings.enableBlur) cmd.ReleaseTemporaryRT(m_SSPRTextureTempResultHandle.id);
+            cmd.ReleaseTemporaryRT(m_SSPRTextureTempResultHandle.id);
         }
 
         // 设置SSPR渲染所需要的的数据

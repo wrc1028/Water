@@ -5,31 +5,12 @@ namespace WaterSystem
     [ExecuteAlways]
     public class Water : MonoBehaviour
     {
-#region Wave params
-        [Header("Wave")]
-        [Range(1, 10)]
-        public int waveCount = 5;
-        [Min(0.0f)]
-        public Vector2 waveAmplitude = new Vector2(0.4f, 1.0f);
-        [Min(0.0f)]
-        public Vector2 waveLength = new Vector2(2.0f, 4.0f);
-        [Min(0.0f)]
-        public Vector2 waveSpeed = new Vector2(2.0f, 4.0f);
-        [Range(-180, 180)]
-        public float waveDirection = 0;
-        public int randomSeed = 156431684;
-        [HideInInspector]
-        public Vector4[] waveData = new Vector4[10];
-        private static readonly int WaveCountID = Shader.PropertyToID("_WaveCount");
-        private static readonly int WaveDataID = Shader.PropertyToID("_WaveData");
-#endregion
-
-#region  Detail Normal
-        
-#endregion
+        private Material waterMaterial;
+        [HideInInspector] public bool isWaveSettingsDataFoldout = false;
+        public WaveSettingsData waveSettingsData;
         private void OnEnable() 
         {
-            SetWaveData();
+            waterMaterial = GetComponent<MeshRenderer>().sharedMaterial;
         }
         private void OnValidate() 
         {
@@ -37,24 +18,45 @@ namespace WaterSystem
         }
         public void SetWaveData()
         {
-            //amplitude waveLength flowSpeed flowDirection
-            // TODO: 解决调节波浪叠加次数时, 高度变化会随着次数增多而减少的问题
-            Shader.SetGlobalInt(WaveCountID, waveCount);
-            Random.State beforeRandomState = Random.state;
-            Random.InitState(randomSeed);
-            float waveAmplitudeRange = waveAmplitude.y - waveAmplitude.x; // 
-            float minWaveAmplitude = waveAmplitude.x + waveAmplitudeRange * (0.5f - waveCount * 0.05f);
-            float maxWaveAmplitude = waveAmplitude.y - waveAmplitudeRange * (0.5f - waveCount * 0.05f);
-            for (int i = 0; i < waveCount; i++)
+            if (waterMaterial == null) return;
+            if (waveSettingsData == null)
             {
-                waveData[i].x = Random.Range(minWaveAmplitude, maxWaveAmplitude);
-                waveData[i].y = Random.Range(waveLength.x, waveLength.y);
-                waveData[i].z = Random.Range(waveSpeed.x, waveSpeed.y);
-                waveData[i].w = (Random.Range(-90, 90) + waveDirection) / Mathf.PI;
-                Random.InitState(randomSeed + i + 1);
+                waterMaterial.DisableKeyword(WaveSettingsData.sinusoidsKeyword);
+                waterMaterial.DisableKeyword(WaveSettingsData.gerstnerKeyword);
+                return;
+            }
+            switch (waveSettingsData.waveType)
+            {
+                case WaveType.SINUSOIDS:
+                    waterMaterial.EnableKeyword(WaveSettingsData.sinusoidsKeyword);
+                    waterMaterial.DisableKeyword(WaveSettingsData.gerstnerKeyword);
+                    break;
+                case WaveType.GERSTNER:
+                    waterMaterial.DisableKeyword(WaveSettingsData.sinusoidsKeyword);
+                    waterMaterial.EnableKeyword(WaveSettingsData.gerstnerKeyword);
+                    break;
+                default:
+                    break;
+            }
+            //amplitude waveLength flowSpeed flowDirection
+            Shader.SetGlobalInt(WaveSettingsData.WaveCountID, waveSettingsData.waveCount);
+            Shader.SetGlobalFloat(WaveSettingsData.QiID, waveSettingsData.waveSharp);
+            
+            Random.State beforeRandomState = Random.state;
+            Random.InitState(waveSettingsData.randomSeed);
+            float waveAmplitudeRange = waveSettingsData.waveAmplitude.y - waveSettingsData.waveAmplitude.x; // 
+            float minWaveAmplitude = waveSettingsData.waveAmplitude.x + waveAmplitudeRange * (0.5f - waveSettingsData.waveCount * 0.05f);
+            float maxWaveAmplitude = waveSettingsData.waveAmplitude.y - waveAmplitudeRange * (0.5f - waveSettingsData.waveCount * 0.05f);
+            for (int i = 0; i < waveSettingsData.waveCount; i++)
+            {
+                waveSettingsData.waveData[i].x = Random.Range(minWaveAmplitude, maxWaveAmplitude);
+                waveSettingsData.waveData[i].y = Random.Range(waveSettingsData.waveLength.x, waveSettingsData.waveLength.y);
+                waveSettingsData.waveData[i].z = Random.Range(waveSettingsData.waveSpeed.x, waveSettingsData.waveSpeed.y);
+                waveSettingsData.waveData[i].w = (Random.Range(-120, 120) + waveSettingsData.waveDirection) / Mathf.PI;
+                Random.InitState(waveSettingsData.randomSeed + i + 1);
             }
             Random.state = beforeRandomState;
-            Shader.SetGlobalVectorArray(WaveDataID, waveData);
+            Shader.SetGlobalVectorArray(WaveSettingsData.WaveDataID, waveSettingsData.waveData);
         }
     }
 }
