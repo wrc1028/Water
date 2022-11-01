@@ -1,0 +1,34 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a9f7e9e20d7da574d98c4dbfcdccf1a3, type: 3}
+  m_Name: WaveSettingsData
+  m_EditorClassIdentifier: 
+  isEnable: 0
+  waveType: 1
+  waveSharp: 1.5
+  waveCount: 4
+  waveAmplitude: {x: 0.053796068, y: 0.14799747}
+  waveLength: {x: 0.5680076, y: 1.0694145}
+  waveSpeed: {x: -1.0336438, y: 0.7780086}
+  waveDirection: {x: -52.087986, y: 56.3744}
+  randomSeed: 156481784
+  waveData:
+  - {x: 0.08279074, y: 0.6281285, z: 0.113168806, w: 0.28652486}
+  - {x: 0.104863435, y: 1.0368825, z: 1.0800843, w: 0.44870648}
+  - {x: 0.0892879, y: 0.7977938, z: 0.9412822, w: -0.33594245}
+  - {x: 0.11139781, y: 0.5844538, z: -0.42764068, w: 0.9648269}
+  - {x: 0.076899596, y: 0.9299195, z: 0.9591774, w: -0.037310623}
+  - {x: 0.14623585, y: 0.74378407, z: -0.17673755, w: 0.049032893}
+  - {x: 0.108897835, y: 0.6636177, z: 1.8417614, w: 0.6163057}
+  - {x: 0.13672559, y: 0.78760123, z: 0.8026357, w: 0.22526222}
+  - {x: 0.16986866, y: 0.82075536, z: 1.2657015, w: 0.16711439}
+  - {x: 0, y: 0, z: 0, w: 0}

@@ -4,6 +4,11 @@
 #if defined(SINUSOIDS_WAVE) || defined(GERSTNER_WAVE)
 #include "Passes/Wave.hlsl"
 #endif
+#include "Passes/Lighting.hlsl" 
+#include "Passes/Refraction.hlsl"
+#include "Passes/Reflection.hlsl"
+#include "Passes/Caustics.hlsl"
+
 
 Varyings WaterVertex(Attributes input)
 {
@@ -13,24 +18,21 @@ Varyings WaterVertex(Attributes input)
     UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(output);
 
     float3 positionWS = TransformObjectToWorld(input.positionOS.xyz);
-    
+    float  seaLevel = positionWS.y;
     float3 normalWS = TransformObjectToWorldDir(input.normalOS);
-    float3 tangentWS = TransformObjectToWorldDir(input.tangentOS.xyz);
+    float3 tangentWS = half3(1, 0, 0);//TransformObjectToWorldDir(input.tangentOS.xyz);
 #if defined(SINUSOIDS_WAVE)
     SinesWaveAnimation(positionWS, normalWS);
 #elif defined(GERSTNER_WAVE)
     GerstnerWaveAnimation(positionWS, normalWS);
 #endif
     float3 binormalWS = cross(normalWS, tangentWS) * input.tangentOS.w;
-    // TODO: 分为UV采样和positionWS采样, 这两种采样所用到的TBN是不一样的, 需要单独考虑
-    output.baseUV.xy = TransformWaterTex(input.texcoord, _BaseNormalSize, float2(_BaseNormalFlowX, _BaseNormalFlowY));
-    output.baseUV.zw = TransformWaterTex(input.texcoord, _AdditionalNormalSize, float2(_AdditionalNormalFlowX, _AdditionalNormalFlowY));
     output.positionCS = TransformWorldToHClip(positionWS);
     output.positionSS = ComputeScreenPos(output.positionCS);
     output.TtoW01 = float4(tangentWS, positionWS.x);
     output.TtoW02 = float4(binormalWS, positionWS.y);
     output.TtoW03 = float4(normalWS, positionWS.z);
-
+    output.waveHeight = saturate(positionWS.y - seaLevel);
     return output;
 }
 
@@ -40,93 +42,42 @@ half4 WaterFragment(Varyings input) : SV_Target
     WaterInputDatas inputDatas = (WaterInputDatas)0;
     InitializeWaterInputData(input, inputDatas);
 
-    half2 screenUV = input.positionSS.xy / input.positionSS.w;
-    float3 positionWS = float3(input.TtoW01.w, input.TtoW02.w, input.TtoW03.w);
-    half3 viewDirWS = normalize(_WorldSpaceCameraPos.xyz - positionWS);
-    half3x3 TBNMatrxi = half3x3(normalize(input.TtoW01.xyz), normalize(input.TtoW02.xyz), normalize(input.TtoW03.xyz));
-    float4 shadowCoord = TransformWorldToShadowCoord(positionWS);
+    float4 shadowCoord = TransformWorldToShadowCoord(inputDatas.positionWS);
     Light mainLight = GetMainLight(shadowCoord);
-    // Detail normal : sample use uv; how to sample it by position
-    // input.baseUV.xy = TransformWaterTex(positionWS.zx / 100, _BaseNormalSize, float2(_BaseNormalFlowX, _BaseNormalFlowY));
-    // input.baseUV.zw = TransformWaterTex(positionWS.zx / 100, _AdditionalNormalSize, float2(_AdditionalNormalFlowX, _AdditionalNormalFlowY));
-    half3 waveAdditionalNormalTS = UnpackNormalScale(SAMPLE_TEXTURE2D(_WaveDetailNormal, sampler_WaveDetailNormal, input.baseUV.zw), _AdditionalNormalStrength);
-    half2 baseNormalUV = input.baseUV.xy + waveAdditionalNormalTS.xy * _NormalDistorted * 0.01; // TODO: 验证扭曲
-    half3 normalTS = UnpackNormalScale(SAMPLE_TEXTURE2D(_WaveDetailNormal, sampler_WaveDetailNormal, baseNormalUV), _BaseNormalStrength);
-    normalTS = WhiteoutNormalBlend(normalTS, waveAdditionalNormalTS);
-
-    half3 normalWS = mul(normalTS, TBNMatrxi);
-    float eyeToWaterDepth = LinearEyeDepth(input.positionCS.z, _ZBufferParams);
-    half normalAtten = saturate(eyeToWaterDepth / _NormalAttenDst);
-    normalWS = normalize(lerp(normalWS, half3(0, 1, 0), min(0.9, normalAtten)));
-    /// ============= Shadering =============
-    // depth
-    // 场景深度和水深度相减，让扰动随着深度变化
-    float rawDepth = SAMPLE_DEPTH_TEXTURE(_CameraDepthTexture, sampler_CameraDepthTexture_point_clamp, screenUV);
-    float eyeToOpaqueDepth = LinearEyeDepth(rawDepth, _ZBufferParams);
-    half2 screenDistortion = normalWS.zx * _RefractionDistorted * 0.01 * saturate(eyeToOpaqueDepth - eyeToWaterDepth);
-    half rawDepthDistortion = SAMPLE_DEPTH_TEXTURE(_CameraDepthTexture, sampler_CameraDepthTexture_point_clamp, screenUV + screenDistortion);
-    float3 positionSWS = GetWorldPositionFromDepth(screenUV, rawDepthDistortion);
-    screenDistortion *= positionSWS.y > positionWS.y ? 0 : 1;
-    rawDepthDistortion = positionSWS.y > positionWS.y ? rawDepth : rawDepthDistortion;
-    float eyeLinearWaterDepth = max(0, LinearEyeDepth(rawDepthDistortion, _ZBufferParams) - eyeToWaterDepth);
-
-    float verticalWaterDepth = max(0, positionWS.y - positionSWS.y);
-    half shallowMask = min(1, verticalWaterDepth * 6);
-
-    half3 finalColor = 0;
-    /// ============= refraction color ============= 
-    half4 opaqueColor = SAMPLE_TEXTURE2D(_CameraOpaqueTexture, sampler_CameraOpaqueTexture_linear_clamp, screenUV + screenDistortion);
-    half4 waterSimpleColor = SimpleWaterColor(_ShallowColor, _DepthColor, eyeLinearWaterDepth, _ShallowDepthAdjust, _MaxVisibleDepth);
-    half3 refractColor = waterSimpleColor.rgb * opaqueColor.rgb * _RefractionIntensity;
-    // ============= TODO: SSS =============
-// #ifdef _QUALITY_GRADE_HIGH
-    // half3 viewDirPWS = normalize(half3(viewDirWS.x, 0, viewDirWS.z));
-    // finalColor += Pow2(max(0, dot(viewDirPWS, normalWS))) * mainLight.color * _SSSIntensity * Pow5(1.0 - max(0, dot(half3(0, 1, 0), viewDirWS)));
-    // Fast SSS
-    // half3 vLTLight = normalize(mainLight.direction + normalWS * _SSSNormalInfluence);
-    // half fLTDot = pow(saturate(dot(viewDirWS, -vLTLight)), _SSSPower) * _SSSScale;
-    // finalColor += fLTDot * mainLight.color * _SSSColor;
-// #endif
-    // ============= diffuse =============
-    finalColor += max(0, dot(normalWS, mainLight.direction)) * mainLight.color * _ShallowColor.rgb * _DiffuseIntensity;
-    // ============= Specular Color GGX TODO: specualr Color and Smothness =============
-	finalColor += BRDFSpecular(normalWS, mainLight.direction, viewDirWS, half3(1, 1, 1), 0.002);
-
+    half4 finalColor = 0;
+    // ============= Lighting ============
+    half shallowMask = saturate(inputDatas.depths.y / 0.4);
+    finalColor += SampleLambertColor(inputDatas, mainLight, _ShallowColor) * _DiffuseIntensity * shallowMask;
+    finalColor.rgb += UnityDirectBDRF(inputDatas, mainLight) * _SpecularIntensity;
+    // ============= refraction color =============
+    half4 opaqueColor = SampleRefractionColor(inputDatas);
+    half4 waterSimpleColor = 0;
+#if defined(SINGLECOLOR)
+    waterSimpleColor = SampleSimpleWaterColor(inputDatas, _ShallowColor, _VisibleDepth);
+#elif defined(DOUBLECOLOR)
+    waterSimpleColor = SampleSimpleWaterColor(inputDatas, _ShallowColor, _DepthColor, _VisibleDepth, _ShallowDepthAdjust);
+#else
+    waterSimpleColor = SampleAbsorptionColor(inputDatas, _VisibleDepth);
+#endif
+    half4 causticsColor = SampleCausticsColorMix(inputDatas, _CausticsSize) * shallowMask;
+    half4 refractColor = (opaqueColor + causticsColor) * waterSimpleColor;
+    refractColor *= exp(-inputDatas.depths.y * _Visible);
     // ============= Reflection =============
-    half3 reflectColor = 0;
-    half fresnelValue = pow((1.0 - saturate(dot(normalWS, viewDirWS))), _FresnelFactor);
-    half3 viewReflDirWS = reflect(-viewDirWS, normalize(normalWS * half3(0.1, 1, 0.1)));
-    half4 encodedIrradiance = SAMPLE_TEXTURECUBE_LOD(_EnvCubeMap, sampler_EnvCubeMap, viewReflDirWS, 0);
-    reflectColor = DecodeHDREnvironment(encodedIrradiance, _EnvCubeMap_HDR);
-    half4 ssprColor = 0;
-    half2 ssprDistortion = normalWS.zx * _ReflectionDistorted * saturate(eyeLinearWaterDepth) * 0.02;
-    ssprColor = SAMPLE_TEXTURE2D(_SSPRTextureResult, sampler_SSPRTextureResult_linear_clamp, screenUV + ssprDistortion);
-    reflectColor = lerp(reflectColor, ssprColor.rgb, ssprColor.a);
-    finalColor += lerp(refractColor, reflectColor * _ReflectionIntensity, saturate(fresnelValue + 0.05));
-
-    // ============= caustics =============
-    // 三平面映射
-    float2 positionCausticsUV01 = positionSWS.zx * _CausticsSize * 0.13 + normalWS.zx * _CausticsDistorted - _Time.y * _BaseNormalSize * float2(_BaseNormalFlowX, _BaseNormalFlowY) * 0.03;
-    float2 positionCausticsUV02 = positionSWS.zx * _CausticsSize * 0.09 + normalWS.zx * _CausticsDistorted + _Time.y * _BaseNormalSize * float2(_BaseNormalFlowX, _BaseNormalFlowY) * 0.06;
-    half3 causticsColor01 = SAMPLE_TEXTURE2D(_CausticsTex, sampler_CausticsTex, positionCausticsUV01).rgb;
-    half3 causticsColor02 = SAMPLE_TEXTURE2D(_CausticsTex, sampler_CausticsTex, positionCausticsUV02).rgb;
-    finalColor += min(causticsColor01, causticsColor02) * saturate(exp(-eyeLinearWaterDepth * _CausticsMaxVisibleDepth)) * _CausticsIntensity * min(1, verticalWaterDepth * 8);
+    half4 reflectColor = 0;
+#if defined(REFLECTION_CUBEMAP)
+    reflectColor = SampleEnvironmentCube(inputDatas);
+#elif defined(REFLECTION_SSSR)
+    reflectColor = SampleSimpleSSR(inputDatas, half2(_RegionSize, _RegionSizeAdjust));
+#elif defined(REFLECTION_SSR)
+#else
+    half4 envColor = SampleEnvironmentCube(inputDatas);
+    half4 ssprColor = SampleSSPRTexture(inputDatas);
+    reflectColor = lerp(envColor, ssprColor, ssprColor.a) * _ReflectionIntensity;
+#endif
+    half fresnel = saturate(Fresnel(inputDatas.normalWS, inputDatas.viewDirectionWS, _FresnelFactor) + 0.05);
     
-    // ============= foam =============
-    float2 positionFoamUV = (positionWS + normalWS * _FoamDistorted).zx * _FoamSize * 0.1 - _Time.y * _BaseNormalSize * float2(_BaseNormalFlowX, _BaseNormalFlowY) * 0.03;
-    half4 foam = SAMPLE_TEXTURE2D(_FoamTex, sampler_FoamTex, positionFoamUV);
-    half foamMask = 0;
-    // river foam mask
-    half riverFoamMask = 1 - min(1, verticalWaterDepth * _FoamWidth);
-    foamMask += riverFoamMask * lerp(foam.g, foam.r, riverFoamMask * riverFoamMask) * _FoamIntensity * step(0.001, verticalWaterDepth) * min(1, verticalWaterDepth * 50);
-    // wave foam mask
-    normalTS.xy *= _WaveFoamNormalStrength;
-    normalTS.z = sqrt(1 - saturate(dot(normalTS.xy, normalTS.xy)));
-    half waveMask = dot(mul(normalTS, TBNMatrxi), half3(0, 1, 0));
-    foamMask += smoothstep(0.7, 1, waveMask) * _WaveFoamIntensity * foam.b;
-    // foamMask += saturate((positionWS.y - _WaveFoamNormalStrength) * 10) * _WaveFoamIntensity * foam.b;
-    finalColor += foamMask * half3(1, 1, 1);
-    return half4(finalColor, 1);
+    finalColor += lerp(refractColor, reflectColor, fresnel);
+    return finalColor;
 }
 
 #endif

@@ -17,26 +17,7 @@ CBUFFER_START(UnityPerMaterial)
 float4 _ShallowColor;
 float4 _DepthColor;
 float4 _EnvCubeMap_HDR;
-// Detail Normal
-float _NormalAttenDst;
-float _NormalDistorted;
-float _BaseNormalSize;
-float _BaseNormalStrength;
-float _BaseNormalFlowX;
-float _BaseNormalFlowY;
-float _AdditionalNormalSize;
-float _AdditionalNormalStrength;
-float _AdditionalNormalFlowX;
-float _AdditionalNormalFlowY;
-
 float _ShallowDepthAdjust;
-float _MaxVisibleDepth;
-float _DiffuseIntensity;
-float _RefractionDistorted;
-float _RefractionIntensity;
-float _FresnelFactor;
-float _ReflectionDistorted;
-float _ReflectionIntensity;
 
 float _CausticsSize;
 float _CausticsIntensity;
@@ -49,6 +30,34 @@ float _FoamDistorted;
 float _FoamIntensity;
 float _WaveFoamNormalStrength;
 float _WaveFoamIntensity;
+///////////////////////////////////////////
+//                Flow                   //
+///////////////////////////////////////////
+float _FlowDirectionX;
+float _FlowDirectionZ;
+///////////////////////////////////////////
+//               Detail                  //
+///////////////////////////////////////////
+float _NormalDistorted;
+float _BaseNormalSize;
+float _BaseNormalStrength;
+float _AdditionalNormalSize;
+float _AdditionalNormalStrength;
+///////////////////////////////////////////
+//              Lighting                 //
+///////////////////////////////////////////
+float _DiffuseIntensity;
+float _SpecularIntensity;
+float _FresnelFactor;
+
+float _Visible;
+float _VisibleDepth;
+float _RefractionDistorted;
+
+float _RegionSize;
+float _RegionSizeAdjust;
+float _ReflectionDistorted;
+float _ReflectionIntensity;
 CBUFFER_END
 
 #endif

@@ -6,7 +6,7 @@ uniform uint _WaveCount;
 float Qi;
 
 // 最多10个波叠加在一起 amplitude waveLength flowSpeed flowDirection
-// 其中 flowDirection 通过一个一维向量算出来的 sincos
+// TODO: 1、计算顶点和贴图之间的深度来限制顶点位移的程度; 2、采样一张贴图垂直方向采样的贴图或者修改顶点色来控制
 
 // The Sum of Sines Approximation
 half4 _WaveData[10];
@@ -15,7 +15,7 @@ float4 SinesWave(float amplitude, float waveLength, float flowSpeed, float2 flow
 {
     float w = 2 * rcp(waveLength);
     float s = _Time.y * flowSpeed * w;
-    float calc = dot(flowDirection, positionWS.xz) * w + s;
+    float calc = dot(flowDirection, positionWS.xz) * w - s;
     float sinCalc = sin(calc);
     float cosCalc = cos(calc);
     float offsetY = amplitude * sinCalc;
@@ -45,7 +45,7 @@ void GerstnerWave(float amplitude, float waveLength, float flowSpeed, float2 flo
 {
     float w = 2 * rcp(waveLength);
     float s = _Time.y * flowSpeed * w;
-    float calc = dot(flowDirection, positionWS.xz) * w + s;
+    float calc = dot(flowDirection, positionWS.xz) * w - s;
     float qi = Qi / (w * amplitude * _WaveCount);
     float sinCalc = sin(calc);
     float cosCalc = cos(calc);
@@ -66,11 +66,11 @@ void GerstnerWaveAnimation(inout float3 positionWS, inout float3 normalWS)
     [unroll]
     for(uint i = 0; i < _WaveCount; i++)
     {
-        half2 flowDirection = half2(sin(_WaveData[i].w), cos(_WaveData[i].w));
+        half2 flowDirection = half2(cos(_WaveData[i].w), sin(_WaveData[i].w));
         GerstnerWave(_WaveData[i].x, _WaveData[i].y, _WaveData[i].z, flowDirection, positionWS, normals, offset);
     }
     normalWS = normalize(normalWS + normals);
     positionWS += (offset * float3(1, rcp(_WaveCount), 1));
 }
-
+// TODO: 快速傅里叶变换
 #endif

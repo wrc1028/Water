@@ -9,7 +9,7 @@ Material:
   m_PrefabAsset: {fileID: 0}
   m_Name: Water
   m_Shader: {fileID: 4800000, guid: 69eaebb6d3453854f9b1609888087ab1, type: 3}
-  m_ShaderKeywords: GERSTNER_WAVE _QUALITY_GRADE_HIGH
+  m_ShaderKeywords: REFLECTION_SSPR SINGLECOLOR _QUALITY_GRADE_HIGH
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
   m_DoubleSidedGI: 0
@@ -19,6 +19,10 @@ Material:
   m_SavedProperties:
     serializedVersion: 3
     m_TexEnvs:
+    - _AbsorptionScatteringTexture:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
     - _BaseMap:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
@@ -40,7 +44,11 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _EnvCubeMap:
-        m_Texture: {fileID: 8900000, guid: af0cff541baddf846ac5bc7424352c38, type: 3}
+        m_Texture: {fileID: 8900000, guid: 963981342702bf3439137bddb9c9e03a, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _FlowMap:
+        m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _FoamTex:
@@ -72,52 +80,60 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     m_Floats:
-    - _AdditionalNormalFlowX: 0.081
-    - _AdditionalNormalFlowY: -0.393
+    - _AdditionalNormalFlowX: 0.059
+    - _AdditionalNormalFlowY: -0.11
     - _AdditionalNormalSize: 12
-    - _AdditionalNormalStrength: 0.48
+    - _AdditionalNormalStrength: 0.461
     - _AlphaClip: 0
-    - _BaseNormalFlowX: -0.455
-    - _BaseNormalFlowY: 0.272
-    - _BaseNormalSize: 6
-    - _BaseNormalStrength: 0.34
+    - _BaseNormalFlowX: -1
+    - _BaseNormalFlowY: 0
+    - _BaseNormalSize: 6.06
+    - _BaseNormalStrength: 0.449
     - _Blend: 0
     - _BumpScale: 1
     - _CausticsDistorted: 0.29
-    - _CausticsIntensity: 0.431
+    - _CausticsIntensity: 1
     - _CausticsMaxVisibleDepth: 4.01
-    - _CausticsSize: 3.85
+    - _CausticsSize: 30.5
     - _Cull: 2
     - _Cutoff: 0.5
-    - _DiffuseIntensity: 0.109
+    - _DiffuseIntensity: 0.125
     - _DstBlend: 0
     - _EnvironmentReflections: 1
+    - _FlowDirectionX: 0.53259164
+    - _FlowDirectionZ: 0.17304952
+    - _FlowSpeed: 5
     - _FoamDistorted: 0.371
     - _FoamIntensity: 0.517
     - _FoamSize: 3
     - _FoamWidth: 10
-    - _FresnelFactor: 6.07
+    - _FresnelFactor: 5
     - _GlossMapScale: 0
     - _Glossiness: 0
     - _GlossyReflections: 0
-    - _MaxVisibleDepth: 3.85
+    - _MaxVisibleDepth: 3.4
     - _Metallic: 0
     - _NormalAttenDst: 70
-    - _NormalDistorted: 10
+    - _NormalDistorted: 0.916
     - _OcclusionStrength: 1
     - _QueueOffset: 0
     - _ReceiveShadows: 1
-    - _ReflectionDistorted: 2.57
-    - _ReflectionIntensity: 0.991
-    - _RefractionDistorted: 5.13
-    - _RefractionIntensity: 0.813
+    - _ReflectionDistorted: 0.284
+    - _ReflectionIntensity: 1
+    - _RefractionDistorted: 1
+    - _RefractionIntensity: 0.268
+    - _RegionSize: 150
+    - _RegionSizeAdjust: 0.1
     - _ScreenDistorted: 4.79
-    - _ShallowDepthAdjust: 0.338
+    - _ShallowDepthAdjust: 0.235
     - _Smoothness: 0.5
     - _SmoothnessTextureChannel: 0
     - _SpecularHighlights: 1
+    - _SpecularIntensity: 1
     - _SrcBlend: 1
     - _Surface: 0
+    - _Visible: 0.115
+    - _VisibleDepth: 7
     - _WaveAmplitude: 0.3
     - _WaveCount: 3
     - _WaveFlowSpeed: 1
@@ -130,9 +146,10 @@ Material:
     m_Colors:
     - _BaseColor: {r: 1, g: 1, b: 1, a: 1}
     - _Color: {r: 1, g: 1, b: 1, a: 1}
-    - _DepthColor: {r: 0.11494303, g: 0.29472578, b: 0.5943396, a: 1}
+    - _DepthColor: {r: 0.19379672, g: 0.29375505, b: 0.6320754, a: 0.74509805}
+    - _DiffuseColor: {r: 0.3882353, g: 0.8862745, b: 0.827451, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
-    - _ShallowColor: {r: 0, g: 0.8018868, b: 0.70566046, a: 1}
+    - _ShallowColor: {r: 0.2232111, g: 0.8301887, b: 0.75175893, a: 0.7019608}
     - _SpecColor: {r: 0.2, g: 0.2, b: 0.2, a: 1}
 --- !u!114 &3394299672350323043
 MonoBehaviour:
