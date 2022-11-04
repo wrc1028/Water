@@ -59,6 +59,26 @@ namespace WaterSystemEditor
                 CreateEditor(lightingSettingsData.objectReferenceValue).OnInspectorGUI();
             }
             EditorGUILayout.EndFoldoutHeaderGroup();
+
+            GUILayout.Space(5);
+
+            SerializedProperty causticsSettingsData = serializedObject.FindProperty("causticsSettingsData");
+            DrawCustomEditorGUI.ToggleFoldoutGroup(ref water.isCausticsSettingsDataFoldout, "焦散设置", causticsSettingsData);
+            if (water.isCausticsSettingsDataFoldout && causticsSettingsData.objectReferenceValue != null)
+            {
+                CreateEditor(causticsSettingsData.objectReferenceValue).OnInspectorGUI();
+            }
+            EditorGUILayout.EndFoldoutHeaderGroup();
+
+            GUILayout.Space(5);
+
+            SerializedProperty foamSettingsData = serializedObject.FindProperty("foamSettingsData");
+            DrawCustomEditorGUI.ToggleFoldoutGroup(ref water.isFoamSettingsDataFoldout, "白沫设置", foamSettingsData);
+            if (water.isFoamSettingsDataFoldout && foamSettingsData.objectReferenceValue != null)
+            {
+                CreateEditor(foamSettingsData.objectReferenceValue).OnInspectorGUI();
+            }
+            EditorGUILayout.EndFoldoutHeaderGroup();
             
             serializedObject.ApplyModifiedProperties();
             if (GUI.changed) water.UpdateWaterParams();

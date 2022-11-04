@@ -23,6 +23,7 @@ namespace WaterSystemEditor
             DrawCustomEditorGUI.MinMaxSliderVisibleValue("波浪方向", ref settingsData.waveDirection.x, ref settingsData.waveDirection.y, -180.0f, 180.0f, EditorGUIUtility.labelWidth);
             DrawCustomEditorGUI.MinMaxSliderVisibleValue("波浪速度", ref settingsData.waveSpeed.x, ref settingsData.waveSpeed.y, -5.0f, 5.0f, EditorGUIUtility.labelWidth);
             settingsData.randomSeed = EditorGUILayout.IntField("随机因子", settingsData.randomSeed);
+            
             if (GUI.changed) EditorUtility.SetDirty(settingsData);
         }
     }

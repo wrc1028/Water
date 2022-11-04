@@ -3,6 +3,8 @@ Shader "Custom/Water"
     Properties
     {
         [Header(Flow)]
+        _FlowMap ("Flow Map", 2D) = "black" {}
+        _FlowSpeed ("FlowSpeed", float) = 0.1
         _FlowDirectionX ("Flow Direction X", float) = 0
         _FlowDirectionZ ("Flow Direction Z", float) = 1
         
@@ -21,7 +23,7 @@ Shader "Custom/Water"
         _AbsorptionScatteringTexture ("Absorption/Scattering Texture", 2D) = "white" {}
 
         [Header(Lighting)]
-        _DiffuseIntensity ("Diffuse Intensity", Range(0, 0.5)) = 0.2
+        _DiffuseIntensity ("Diffuse Intensity", Range(0, 1)) = 0.2
         _SpecularIntensity ("Specular Intensity", Range(0, 1)) = 0.8
         _FresnelFactor ("Fresnel Factor", Range(0.01, 10)) = 5
 
@@ -34,24 +36,25 @@ Shader "Custom/Water"
         _EnvCubeMap ("Environment Cube Map", Cube) = "SkyBox" {}
         _RegionSize ("Region Size", float) = 150
         _RegionSizeAdjust ("Region Size Adjust", float) = 0.1
+        _MarchingSteps ("MarchingSteps", int) = 16
         _ReflectionIntensity ("Reflection Intensity", Range(0, 2)) = 0.6
         _ReflectionDistorted ("Reflection Distorted", Range(0, 5)) = 2
-        // =================================================================
-        [Header(Caustics)]
-        _CausticsTex ("Caustics Texture", 2D) = "white" {}
-        _CausticsSize ("Caustics Size", float) = 2
-        _CausticsIntensity ("Caustics Intensity", Range(0, 1)) = 0.3
 
+        [Header(Caustics)]
+        _CausticsTex ("Caustics Texture", 2D) = "black" {}
+        _CausticsSize ("Caustics Size", float) = 2
+        _CausticsIntensity ("Caustics Intensity", Range(0, 2)) = 0.3
+        
+        // =================================================================
         [Header(Foam)]
         _FoamTex ("Foam Texture", 2D) = "white" {}
-        _FoamSize ("Foam Size", float) = 3
-        _FoamDistorted ("Foam Distorted", Range(0, 2)) = 0.4
+        _FoamSize ("Foam Size", float) = 20
 
-        _FoamIntensity ("Shoreside Foam Intensity", Range(0, 1)) = 0.5
-        _FoamWidth ("Shoreside Foam Width", Range(0, 10)) = 2.43
+        _ShoresideFoamWidth ("Shoreside Foam Width", Range(0, 10)) = 0.2
+        _ShoresideFoamIntensity ("Shoreside Foam Intensity", Range(0, 1)) = 0.5
 
-        _WaveFoamIntensity ("Wave Foam Intensity", Range(0, 1)) = 0.26
-        _WaveFoamNormalStrength ("Wave Foam Scale", float) = 6.2
+        // _WaveFoamIntensity ("Wave Foam Intensity", Range(0, 1)) = 0.26
+        // _WaveFoamNormalStrength ("Wave Foam Scale", float) = 6.2
     }
     SubShader
     {
@@ -71,6 +74,7 @@ Shader "Custom/Water"
             #pragma multi_compile _ _MAIN_LIGHT_SHADOWS_CASCADE
 
             // ====== shader feature ======
+            #pragma shader_feature DIRECTION FLOWMAP
             #pragma shader_feature _ SINUSOIDS_WAVE GERSTNER_WAVE
             #pragma shader_feature SINGLECOLOR DOUBLECOLOR RAMPTEXTURE
             #pragma shader_feature REFLECTION_CUBEMAP REFLECTION_SSSR REFLECTION_SSR REFLECTION_SSPR

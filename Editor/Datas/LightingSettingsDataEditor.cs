@@ -34,7 +34,7 @@ namespace WaterSystem
             }
             GUILayout.Space(5);
             GUILayout.Label("光照", EditorStyles.boldLabel);
-            settingsData.diffuseIntensity = EditorGUILayout.Slider("漫反射强度", settingsData.diffuseIntensity, 0, 0.5f);
+            settingsData.diffuseIntensity = EditorGUILayout.Slider("漫反射强度", settingsData.diffuseIntensity, 0, 1.0f);
             settingsData.specularIntensity = EditorGUILayout.Slider("高光反射强度", settingsData.specularIntensity, 0, 1.0f);
             settingsData.fresnel = EditorGUILayout.Slider("菲涅尔", settingsData.fresnel, 0.001f, 10.0f);
             GUILayout.Space(5);
@@ -65,6 +65,8 @@ namespace WaterSystem
                     break;
             }
             settingsData.reflectionIntensity = EditorGUILayout.Slider("反射强度", settingsData.reflectionIntensity, 0, 2.0f);
+
+            if (GUI.changed) EditorUtility.SetDirty(settingsData);
         }
     }
 }

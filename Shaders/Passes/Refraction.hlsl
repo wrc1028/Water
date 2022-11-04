@@ -29,17 +29,17 @@ half4 SampleSimpleWaterColor(WaterInputDatas input, float4 shallowColor, float4 
 // ramp texture
 half4 SampleAbsorptionColor(WaterInputDatas input, float visibleDepth)
 {
-    half2 uv = half2(input.depths.y / visibleDepth, 0.25);
-    return 0; // SAMPLE_TEXTURE2D(_AbsorptionScatteringTexture, sampler_AbsorptionScatteringTexture_linear_clamp, uv);
+    float2 uv = float2(saturate(input.depths.y / visibleDepth) - 0.01, 0.25);
+    return SAMPLE_TEXTURE2D(_AbsorptionScatteringTexture, sampler_AbsorptionScatteringTexture, uv);
 }
 half4 SampleScatteringColor(WaterInputDatas input, float visibleDepth)
 {
-    half2 uv = half2(input.depths.y / visibleDepth, 0.75);
-    return 0; // SAMPLE_TEXTURE2D(_AbsorptionScatteringTexture, sampler_AbsorptionScatteringTexture_linear_clamp, uv);
+    float2 uv = float2(saturate(input.depths.y / visibleDepth) - 0.01, 0.75);
+    return SAMPLE_TEXTURE2D(_AbsorptionScatteringTexture, sampler_AbsorptionScatteringTexture, uv);
 }
 // refraction color
 half4 SampleRefractionColor(WaterInputDatas input)
 {
-    return SAMPLE_TEXTURE2D(_CameraOpaqueTexture, sampler_CameraOpaqueTexture_linear_clamp, input.screenUV + input.screenUVOffset.xy);
+    return SAMPLE_TEXTURE2D(_CameraOpaqueTexture, sampler_CameraOpaqueTexture_linear_clamp, input.screenUV.xy + input.screenUVOffset.xy);
 }
 #endif

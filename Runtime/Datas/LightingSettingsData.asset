@@ -13,8 +13,9 @@ MonoBehaviour:
   m_Name: LightingSettingsData
   m_EditorClassIdentifier: 
   waterColorType: 0
-  color_1: {r: 0.3882353, g: 0.8862745, b: 0.827451, a: 0.8156863}
-  color_2: {r: 0.16470589, g: 0.39607844, b: 0.5647059, a: 0.57254905}
+  color_1: {r: 0.26633143, g: 0.8962264, b: 0.82865006, a: 0.6862745}
+  color_2: {r: 0.17065683, g: 0.37119788, b: 0.5566038, a: 0.7921569}
+  interval: 0.17
   absorbGradient:
     serializedVersion: 2
     key0: {r: 1, g: 1, b: 1, a: 1}
@@ -26,9 +27,9 @@ MonoBehaviour:
     key6: {r: 0, g: 0, b: 0, a: 0}
     key7: {r: 0, g: 0, b: 0, a: 0}
     ctime0: 0
-    ctime1: 5374
-    ctime2: 20840
-    ctime3: 43581
+    ctime1: 7517
+    ctime2: 22745
+    ctime3: 45104
     ctime4: 65535
     ctime5: 0
     ctime6: 0
@@ -73,14 +74,16 @@ MonoBehaviour:
     m_Mode: 0
     m_NumColorKeys: 4
     m_NumAlphaKeys: 2
-  diffuseIntensity: 0.2
+  diffuseIntensity: 0.06
   specularIntensity: 0.5
-  visible: 1
-  visibleDepth: 6
-  refractionDesition: 1
-  reflectionType: 2
-  customCube: {fileID: 0}
+  fresnel: 7
+  visible: 0.503
+  visibleDepth: 8.5
+  refractionDesition: 0.31
+  reflectionType: 3
+  customCube: {fileID: 8900000, guid: 963981342702bf3439137bddb9c9e03a, type: 3}
   regionSize: 150
   regionSizeAdjust: 0.1
   marchingSetps: 16
   reflectionIntensity: 1
+  reflectionDistorted: 0.364

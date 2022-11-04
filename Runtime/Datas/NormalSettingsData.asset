@@ -13,8 +13,8 @@ MonoBehaviour:
   m_Name: NormalSettingsData
   m_EditorClassIdentifier: 
   normal: {fileID: 2800000, guid: bc171920e1aaba04387c1b2a99860abc, type: 3}
-  normalDistorted: 0.916
-  baseNormalSize: 6.06
+  normalDistorted: 0.749
+  baseNormalSize: 6
   baseNormalStrength: 0.449
   additionalNormalSize: 12
-  additionalNormalStrength: 0.461
+  additionalNormalStrength: 0.371

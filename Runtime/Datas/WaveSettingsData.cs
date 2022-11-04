@@ -29,6 +29,7 @@ namespace WaterSystem
         [HideInInspector] public static readonly string[] keyword = { "SINUSOIDS_WAVE", "GERSTNER_WAVE" };
         [HideInInspector] public Vector4[] waveData = new Vector4[10];
         [HideInInspector] public static readonly int QiID = Shader.PropertyToID("Qi");
+        [HideInInspector] public static readonly int WaveHeightID = Shader.PropertyToID("_WaveHeight");
         [HideInInspector] public static readonly int WaveCountID = Shader.PropertyToID("_WaveCount");
         [HideInInspector] public static readonly int WaveDataID = Shader.PropertyToID("_WaveData");
     }

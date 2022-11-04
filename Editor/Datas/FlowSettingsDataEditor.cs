@@ -27,6 +27,7 @@ namespace WaterSystemEditor
                     break;
             }
             settingsData.speed = EditorGUILayout.Slider("流动速度", settingsData.speed, 0.0f, 20.0f);
+            
             if (GUI.changed) EditorUtility.SetDirty(settingsData);
         }
     }

@@ -4,6 +4,7 @@
 // #pragma shader_feature _ SINUSOIDS_WAVE GERSTNER_WAVE
 uniform uint _WaveCount;
 float Qi;
+float _WaveHeight;
 
 // 最多10个波叠加在一起 amplitude waveLength flowSpeed flowDirection
 // TODO: 1、计算顶点和贴图之间的深度来限制顶点位移的程度; 2、采样一张贴图垂直方向采样的贴图或者修改顶点色来控制

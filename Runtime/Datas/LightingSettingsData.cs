@@ -53,6 +53,7 @@ namespace WaterSystem
         [HideInInspector] public static readonly int EnvCubeID = Shader.PropertyToID("_EnvCubeMap");
         [HideInInspector] public static readonly int RegionSizeID = Shader.PropertyToID("_RegionSize");
         [HideInInspector] public static readonly int RegionSizeAdjustID = Shader.PropertyToID("_RegionSizeAdjust");
+        [HideInInspector] public static readonly int MarchingStepsID = Shader.PropertyToID("_MarchingSteps");
         [HideInInspector] public static readonly int ReflectionIntensityID = Shader.PropertyToID("_ReflectionIntensity");
         [HideInInspector] public static readonly int ReflectionDistortedID = Shader.PropertyToID("_ReflectionDistorted");
     }

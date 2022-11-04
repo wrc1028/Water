@@ -12,6 +12,12 @@ float2 TransformWaterTex(float2 baseUV, float size, float2 flow)
 {
     return baseUV * size * 0.01 - _Time.y * flow * 0.05;
 }
+
+float3 TransformFlowTex(float2 baseUV, float size, float2 flow)
+{
+    
+    return 0;
+}
 // 法线混合
 half3 WhiteoutNormalBlend(half3 n1, half3 n2)
 {
@@ -35,13 +41,5 @@ float3 GetWorldPositionFromDepth(half2 uv, half depth)
 half Fresnel(half3 normalWS, half3 viewDirectionWS, float powValue) 
 { 
     return pow((1.0 - saturate(dot(normalWS, viewDirectionWS))), powValue);
-}
-// BlinnPhong 高光
-half3 BlinnPhong(half3 normalWS, half3 viewDirWS, Light light)
-{
-    half3 halfDir = normalize(viewDirWS + light.direction);
-    half3 NdotH = saturate(dot(normalWS, halfDir));
-    half NdotH5 = Pow5(NdotH);
-    return light.color * NdotH5;
 }
 #endif

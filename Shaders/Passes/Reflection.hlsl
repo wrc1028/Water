@@ -34,9 +34,14 @@ float4 SampleSimpleSSR(WaterInputDatas input, half2 waterParams)
 	reflectColor = (input.depths.x < rayDepth || input.depths.x < sampleDepth) ? reflectColor : envColor;
 	return lerp(envColor, reflectColor, mask);
 }
+// SSR Fixed step
+float4 SampleSSR(WaterInputDatas input, int steps)
+{
+	
+}
 // SSPR
 float4 SampleSSPRTexture(WaterInputDatas input)
 {
-    return SAMPLE_TEXTURE2D(_SSPRTextureResult, sampler_SSPRTextureResult_linear_clamp, input.screenUV + input.screenUVOffset.zw);
+    return SAMPLE_TEXTURE2D(_SSPRTextureResult, sampler_SSPRTextureResult_linear_clamp, input.screenUV.xy + input.screenUVOffset.zw);
 }
 #endif

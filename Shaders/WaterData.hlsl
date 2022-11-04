@@ -3,6 +3,7 @@
 
 struct Attributes
 {
+    float2 texcoord     : TEXCOORD0;
     float4 positionOS   : POSITION;
     float3 normalOS     : NORMAL;
     float4 tangentOS    : TANGENT;
@@ -12,7 +13,8 @@ struct Attributes
 struct Varyings
 {
     float4 positionCS   : SV_POSITION;
-    float4 positionSS   : TEXCOORD1;
+    float4 positionSS   : TEXCOORD0;
+    float2 uv           : TEXCOORD1;
     float4 TtoW01       : TEXCOORD2;
     float4 TtoW02       : TEXCOORD3;
     float4 TtoW03       : TEXCOORD4;
@@ -24,7 +26,7 @@ struct Varyings
 struct WaterInputDatas
 {
     float3 positionWS;              // world position
-    float2 screenUV;                // origin screen UV
+    float4 screenUV;                // origin screen UV, mesh uv
     float2 depths;                  // eyeToWaterDepth, eyeWaterDepth
     float4 screenUVOffset;          // xy : Refract, zw : Reflect
     float3 positionSSWS;            // screen space world position
@@ -33,6 +35,10 @@ struct WaterInputDatas
     half3  viewDirectionWS;
     half3  viewReflecDirWS;
     half2  flowDirection;
+// #else
+//     half4  flowDirection;           // xy : flow direction, zw : offset
+//     half   flowWeight;
+// #endif
 };
 
 struct WaterSurfaceDatas
@@ -51,20 +57,20 @@ half3 SamplerDetailNormal(Varyings input, float4 uv, float baseNormalStrength, f
     half3 normalTS = UnpackNormalScale(SAMPLE_TEXTURE2D(_WaveDetailNormal, sampler_WaveDetailNormal, baseNormalUV), baseNormalStrength);
     normalTS = WhiteoutNormalBlend(normalTS, waveAdditionalNormalTS);
     half3x3 TBNMatrxi = half3x3(normalize(input.TtoW01.xyz), normalize(input.TtoW02.xyz), normalize(input.TtoW03.xyz));
-    return mul(normalTS, TBNMatrxi);
+    return normalize(mul(normalTS, TBNMatrxi));
 }
 // 初始化平面UV扰动偏移
 inline void InitializescreenUVOffset(inout WaterInputDatas outWaterInputDatas, float refractionDistorted, float reflectionDistorted)
 {
     // x : eyeToWaterDepth, y : eyeToOpaqueDepth
-    float rawEyeToOpaqueDepth = SAMPLE_DEPTH_TEXTURE(_CameraDepthTexture, sampler_CameraDepthTexture_point_clamp, outWaterInputDatas.screenUV);
+    float rawEyeToOpaqueDepth = SAMPLE_DEPTH_TEXTURE(_CameraDepthTexture, sampler_CameraDepthTexture_point_clamp, outWaterInputDatas.screenUV.xy);
     float eyeToOpaqueDepth = LinearEyeDepth(rawEyeToOpaqueDepth, _ZBufferParams);
     float eyeWaterDepth = clamp(eyeToOpaqueDepth - outWaterInputDatas.depths.x, 0, 2);
     // refract uv offset and adjust offset
     half3 normalVS = mul((float3x3)GetWorldToHClipMatrix(), -outWaterInputDatas.normalWS);
-    float2 refractUVOffset = normalVS.xz * eyeWaterDepth * refractionDistorted * 0.01;
-    float rawEyeToOpaqueDistortedDepth = SAMPLE_DEPTH_TEXTURE(_CameraDepthTexture, sampler_CameraDepthTexture_point_clamp, outWaterInputDatas.screenUV + refractUVOffset);
-    outWaterInputDatas.positionSSWS = GetWorldPositionFromDepth(outWaterInputDatas.screenUV, rawEyeToOpaqueDistortedDepth);
+    float2 refractUVOffset = normalVS.xz * eyeWaterDepth * refractionDistorted * 0.1;
+    float rawEyeToOpaqueDistortedDepth = SAMPLE_DEPTH_TEXTURE(_CameraDepthTexture, sampler_CameraDepthTexture_point_clamp, outWaterInputDatas.screenUV.xy + refractUVOffset);
+    outWaterInputDatas.positionSSWS = GetWorldPositionFromDepth(outWaterInputDatas.screenUV.xy, rawEyeToOpaqueDistortedDepth);
     rawEyeToOpaqueDistortedDepth = outWaterInputDatas.positionSSWS.y > outWaterInputDatas.positionWS.y ? rawEyeToOpaqueDepth : rawEyeToOpaqueDistortedDepth;
     outWaterInputDatas.depths.y = max(0, LinearEyeDepth(rawEyeToOpaqueDistortedDepth, _ZBufferParams) - outWaterInputDatas.depths.x);
     outWaterInputDatas.screenUVOffset.xy = refractUVOffset * (outWaterInputDatas.positionSSWS.y > outWaterInputDatas.positionWS.y ? 0 : 1); // TODO: 这个只适合平面水的情况, 顶点动画会有Bug
@@ -77,15 +83,16 @@ inline void InitializescreenUVOffset(inout WaterInputDatas outWaterInputDatas, f
 inline void InitializeWaterInputData(Varyings input, inout WaterInputDatas outWaterInputDatas)
 {
     outWaterInputDatas.positionWS = float3(input.TtoW01.w, input.TtoW02.w, input.TtoW03.w);
-    outWaterInputDatas.screenUV = input.positionSS.xy / input.positionSS.w;
+    outWaterInputDatas.screenUV.xy = input.positionSS.xy / input.positionSS.w;
+    outWaterInputDatas.screenUV.zw = input.uv;
     outWaterInputDatas.depths.x = LinearEyeDepth(input.positionCS.z, _ZBufferParams);
-    
+
     half2  direction = half2(_FlowDirectionX, _FlowDirectionZ);
     float2 baseUV = TransformWaterTex(outWaterInputDatas.positionWS.xz, _BaseNormalSize, direction);
     float2 additionalUV = TransformWaterTex(outWaterInputDatas.positionWS.xz, _AdditionalNormalSize, direction * -0.5);
     outWaterInputDatas.normalWS = SamplerDetailNormal(input, float4(baseUV, additionalUV), _BaseNormalStrength, _AdditionalNormalStrength, _NormalDistorted);
     outWaterInputDatas.viewDirectionWS = normalize(_WorldSpaceCameraPos.xyz - outWaterInputDatas.positionWS);
-    outWaterInputDatas.viewReflecDirWS = reflect(-outWaterInputDatas.viewDirectionWS, normalize(outWaterInputDatas.normalWS * half3(0.05, 1, 0.05))); // 避免法线太强无法反射天空盒信息
+    outWaterInputDatas.viewReflecDirWS = reflect(-outWaterInputDatas.viewDirectionWS, normalize(outWaterInputDatas.normalWS * half3(0.14, 1, 0.14))); // 避免法线太强无法反射天空盒信息
     outWaterInputDatas.flowDirection = direction;
 
     InitializescreenUVOffset(outWaterInputDatas, _RefractionDistorted, _ReflectionDistorted);

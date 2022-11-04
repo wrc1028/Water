@@ -10,7 +10,7 @@ half4 SampleCausticsColor(WaterInputDatas input, half causticsSize)
 half4 SampleCausticsColorMix(WaterInputDatas input, half causticsSize)
 {
     float2 positionUV = input.positionSSWS.xz + input.normalWS.zx * 0.3;
-    float2 positionCausticsUV_1 = TransformWaterTex(positionUV, causticsSize, input.flowDirection * 5);
+    float2 positionCausticsUV_1 = TransformWaterTex(positionUV, causticsSize, input.flowDirection * 3);
     float2 positionCausticsUV_2 = TransformWaterTex(positionUV, causticsSize * 1.5, input.flowDirection * -2);
     half4 causticsColor_1 = SAMPLE_TEXTURE2D(_CausticsTex, sampler_CausticsTex, positionCausticsUV_1);
     half4 causticsColor_2 = SAMPLE_TEXTURE2D(_CausticsTex, sampler_CausticsTex, positionCausticsUV_2);
