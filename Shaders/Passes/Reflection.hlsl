@@ -34,10 +34,77 @@ float4 SampleSimpleSSR(WaterInputDatas input, half2 waterParams)
 	reflectColor = (input.depths.x < rayDepth || input.depths.x < sampleDepth) ? reflectColor : envColor;
 	return lerp(envColor, reflectColor, mask);
 }
-// SSR Fixed step
-float4 SampleSSR(WaterInputDatas input, int steps)
+// SSR and HiZ SSR
+float4 SampleSSR(WaterInputDatas input, int maxSteps)
 {
+	return 0;
+}
+
+// 在0-1的立方体内求: 某点在某方向上到包围盒边界的长度
+float RayIn01AABBBoxDst(float3 rayStart, float3 rayDirection)
+{
+	float3 t0 = (0 - rayStart) / rayDirection;
+    float3 t1 = (1 - rayStart) / rayDirection;
+    float3 tMax = max(t0, t1);
+	return min(tMax.x, min(tMax.y, tMax.z));
+}
+float3 IntersectDepthPlane(float3 rayStart, float3 rayMaxMarchingDst, float ratio)
+{
+	return rayStart + rayMaxMarchingDst * ratio;
+}
+bool CrossedCellBoundary(float2 cellOld, float2 cellNew)
+{
+	return cellOld.x != cellNew.x || cellOld.y != cellNew.y;
+}
+float DirectionalStep(float direction)
+{
+	return direction < 0 ? -1 : ceil(direction);
+}
+float3 IntersectCellBoundary(float3 rayStart, float3 rayMaxMarchingDst, float2 rayEnd)
+{
+	float2 t = (rayEnd - rayStart.xy) / rayMaxMarchingDst.xy;
+	return IntersectDepthPlane(rayStart, rayMaxMarchingDst, min(t.x, t.y));
+}
+// _HiZDepthTexture; sampler_HiZDepthTexture_point_clamp; _HiZDepthMipCount; _HiZDepthTexelSize(xy: 1 / resolution; zw : resolution);
+float4 SampleHiZSSR(WaterInputDatas input, float positionCSZ, int maxSteps)
+{
+	float3 rayStart = float3(input.screenUV.xy, positionCSZ);
+	float4 rayDestinationCS = TransformWorldToHClip(input.positionWS + input.viewReflecDirWS);
+	float4 rayDestination = ComputeScreenPos(rayDestinationCS);
+	rayDestination.xy /= rayDestination.w;
+	float3 rayDirection = normalize(rayDestination.xyz - rayStart);
+	float  maxMarchingDst = RayIn01AABBBoxDst(rayStart, rayDirection);
 	
+	int iteration = 0;
+	int maxMipLevel = _HiZDepthMipCount - 1;
+	int mipLevel = 2; // 从哪一个层级开始步进
+	float3 ray = rayStart;
+	float3 rayMaxMarchingDst = rayDirection * maxMarchingDst;
+
+	float2 directionalStep = float2(DirectionalStep(rayDirection.x), DirectionalStep(rayDirection.y));
+	float2 rayOffset = directionalStep * _HiZDepthTexelSize[0].xy / 128.0;
+	directionalStep = saturate(directionalStep);
+	bool isBackwardRay = rayDirection.z > 0;
+	while (iteration < maxSteps && mipLevel >= 0)
+	{
+		float4 texelSize = _HiZDepthTexelSize[mipLevel];
+		float2 cellOldID = floor(ray.xy * texelSize.zw);
+
+		float HiZDepth = SAMPLE_TEXTURE2D_LOD(_HiZDepthTexture, sampler_HiZDepthTexture_point_clamp, ray.xy, mipLevel).r;
+		float ratio = (HiZDepth - rayStart.z) / rayMaxMarchingDst.z;
+		float3 tempRay = (!isBackwardRay && (ray.z > HiZDepth)) ? IntersectDepthPlane(rayStart, rayMaxMarchingDst, ratio) : ray;
+		float2 cellNewID = floor(tempRay.xy * texelSize.zw);
+
+		bool isCrossed = (isBackwardRay && (ray.z > HiZDepth)) || CrossedCellBoundary(cellOldID, cellNewID);
+		float2 rayEnd = (cellOldID + directionalStep) * texelSize.xy + rayOffset;
+		ray = isCrossed ? IntersectCellBoundary(rayStart, rayMaxMarchingDst, rayEnd) : tempRay;
+		mipLevel = isCrossed ? min(maxMipLevel, mipLevel + 1) : mipLevel - 1;
+		iteration ++;
+	}
+
+	float4 envColor = SampleEnvironmentCube(input);
+	// float alpha = smoothstep(1.0001, 0.85, ray.y) * smoothstep(1.0001, 0.9, abs(ray.x * 2 - 1));
+	return SAMPLE_TEXTURE2D(_CameraOpaqueTexture, sampler_CameraOpaqueTexture_linear_clamp, ray.xy);
 }
 // SSPR
 float4 SampleSSPRTexture(WaterInputDatas input)

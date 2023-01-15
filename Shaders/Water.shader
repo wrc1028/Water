@@ -77,7 +77,7 @@ Shader "Custom/Water"
             #pragma shader_feature DIRECTION FLOWMAP
             #pragma shader_feature _ SINUSOIDS_WAVE GERSTNER_WAVE
             #pragma shader_feature SINGLECOLOR DOUBLECOLOR RAMPTEXTURE
-            #pragma shader_feature REFLECTION_CUBEMAP REFLECTION_SSSR REFLECTION_SSR REFLECTION_SSPR
+            #pragma shader_feature REFLECTION_CUBEMAP REFLECTION_SSSR REFLECTION_SSR REFLECTION_HIZSSR REFLECTION_SSPR
             
             #pragma vertex WaterVertex
             #pragma fragment WaterFragment

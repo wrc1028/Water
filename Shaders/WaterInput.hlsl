@@ -10,6 +10,7 @@ TEXTURE2D(_CameraOpaqueTexture);          SAMPLER(sampler_CameraOpaqueTexture_li
 TEXTURE2D(_AbsorptionScatteringTexture);  SAMPLER(sampler_AbsorptionScatteringTexture);
 TEXTURE2D(_WaveDetailNormal);             SAMPLER(sampler_WaveDetailNormal);
 TEXTURE2D(_SSPRTextureResult);            SAMPLER(sampler_SSPRTextureResult_linear_clamp);
+TEXTURE2D(_HiZDepthTexture);              SAMPLER(sampler_HiZDepthTexture_point_clamp);
 TEXTURE2D(_CausticsTex);                  SAMPLER(sampler_CausticsTex);
 TEXTURE2D(_FoamTex);                      SAMPLER(sampler_FoamTex);
 TEXTURE2D(_FlowMap);                      SAMPLER(sampler_FlowMap);
@@ -61,4 +62,6 @@ float _ReflectionDistorted;
 float _ReflectionIntensity;
 CBUFFER_END
 
+int _HiZDepthMipCount;
+float4 _HiZDepthTexelSize[8];
 #endif

@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: LightingSettingsData
   m_EditorClassIdentifier: 
   waterColorType: 0
-  color_1: {r: 0.26633143, g: 0.8962264, b: 0.82865006, a: 0.6862745}
+  color_1: {r: 0, g: 0.6226415, b: 0.2997904, a: 0.6862745}
   color_2: {r: 0.17065683, g: 0.37119788, b: 0.5566038, a: 0.7921569}
   interval: 0.17
   absorbGradient:
@@ -74,16 +74,17 @@ MonoBehaviour:
     m_Mode: 0
     m_NumColorKeys: 4
     m_NumAlphaKeys: 2
-  diffuseIntensity: 0.06
-  specularIntensity: 0.5
-  fresnel: 7
-  visible: 0.503
-  visibleDepth: 8.5
-  refractionDesition: 0.31
+  diffuseIntensity: 0.026
+  specularIntensity: 1
+  fresnel: 0.001
+  visible: 0.455
+  visibleDepth: 6
+  refractionDesition: 0.201
   reflectionType: 3
-  customCube: {fileID: 8900000, guid: 963981342702bf3439137bddb9c9e03a, type: 3}
+  customCube: {fileID: 8900000, guid: 56d8675673f66184797c6cb0031dda77, type: 3}
   regionSize: 150
   regionSizeAdjust: 0.1
   marchingSetps: 16
+  startMipLevel: 3
   reflectionIntensity: 1
   reflectionDistorted: 0.364

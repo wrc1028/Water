@@ -2,7 +2,7 @@ using UnityEngine;
 namespace WaterSystem
 {
     public enum WaterColorType { SINGLECOLOR, TWOCOLORS, RAMPTEXTURE, }
-    public enum ReflectionType { CUBEMAP, SIMPLESSR, SSR, SSPR, PR, }
+    public enum ReflectionType { CUBEMAP, SIMPLESSR, SSR, HIZSSR, SSPR, PR, }
     [CreateAssetMenu(fileName = "LightingSettingsData", menuName = "WaterSystemDatas/Lighting Settings Data", order = 4)]
     public class LightingSettingsData : ScriptableObject 
     {
@@ -30,6 +30,8 @@ namespace WaterSystem
         public float regionSizeAdjust = 0.1f;
         // 3、SSR(离线计算???)
         public int marchingSetps = 16;
+        // 3.5、HiZSSR
+        public int startMipLevel = 3;
         // 4、SSPR
         // 5、PR
         // =====================
@@ -49,7 +51,7 @@ namespace WaterSystem
         [HideInInspector] public static readonly int VisibleDepthID = Shader.PropertyToID("_VisibleDepth");
         [HideInInspector] public static readonly int RefractionDistortedID = Shader.PropertyToID("_RefractionDistorted");
 
-        [HideInInspector] public static readonly string[] reflectionKeyword = { "REFLECTION_CUBEMAP", "REFLECTION_SSSR", "REFLECTION_SSR", "REFLECTION_SSPR", };
+        [HideInInspector] public static readonly string[] reflectionKeyword = { "REFLECTION_CUBEMAP", "REFLECTION_SSSR", "REFLECTION_SSR", "REFLECTION_HIZSSR", "REFLECTION_SSPR", };
         [HideInInspector] public static readonly int EnvCubeID = Shader.PropertyToID("_EnvCubeMap");
         [HideInInspector] public static readonly int RegionSizeID = Shader.PropertyToID("_RegionSize");
         [HideInInspector] public static readonly int RegionSizeAdjustID = Shader.PropertyToID("_RegionSizeAdjust");

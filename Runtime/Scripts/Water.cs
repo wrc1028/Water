@@ -178,6 +178,7 @@ namespace WaterSystem
                     waterMaterial.DisableKeyword(LightingSettingsData.reflectionKeyword[1]);
                     waterMaterial.DisableKeyword(LightingSettingsData.reflectionKeyword[2]);
                     waterMaterial.DisableKeyword(LightingSettingsData.reflectionKeyword[3]);
+                    waterMaterial.DisableKeyword(LightingSettingsData.reflectionKeyword[4]);
                     waterMaterial.SetTexture(LightingSettingsData.EnvCubeID, lightingSettingsData.customCube);
                     break;
                 case ReflectionType.SIMPLESSR:
@@ -185,14 +186,24 @@ namespace WaterSystem
                     waterMaterial.EnableKeyword(LightingSettingsData.reflectionKeyword[1]);
                     waterMaterial.DisableKeyword(LightingSettingsData.reflectionKeyword[2]);
                     waterMaterial.DisableKeyword(LightingSettingsData.reflectionKeyword[3]);
+                    waterMaterial.DisableKeyword(LightingSettingsData.reflectionKeyword[4]);
                     waterMaterial.SetFloat(LightingSettingsData.RegionSizeID, lightingSettingsData.regionSize);
                     waterMaterial.SetFloat(LightingSettingsData.RegionSizeAdjustID, lightingSettingsData.regionSizeAdjust);
                     break;
                 case ReflectionType.SSR:
-                    // waterMaterial.DisableKeyword(LightingSettingsData.reflectionKeyword[0]);
-                    // waterMaterial.DisableKeyword(LightingSettingsData.reflectionKeyword[1]);
-                    // waterMaterial.EnableKeyword(LightingSettingsData.reflectionKeyword[2]);
-                    // waterMaterial.DisableKeyword(LightingSettingsData.reflectionKeyword[3]);
+                    waterMaterial.DisableKeyword(LightingSettingsData.reflectionKeyword[0]);
+                    waterMaterial.DisableKeyword(LightingSettingsData.reflectionKeyword[1]);
+                    waterMaterial.EnableKeyword(LightingSettingsData.reflectionKeyword[2]);
+                    waterMaterial.DisableKeyword(LightingSettingsData.reflectionKeyword[3]);
+                    waterMaterial.DisableKeyword(LightingSettingsData.reflectionKeyword[4]);
+                    waterMaterial.SetInt(LightingSettingsData.MarchingStepsID, lightingSettingsData.marchingSetps);
+                    break;
+                case ReflectionType.HIZSSR:
+                    waterMaterial.DisableKeyword(LightingSettingsData.reflectionKeyword[0]);
+                    waterMaterial.DisableKeyword(LightingSettingsData.reflectionKeyword[1]);
+                    waterMaterial.DisableKeyword(LightingSettingsData.reflectionKeyword[2]);
+                    waterMaterial.EnableKeyword(LightingSettingsData.reflectionKeyword[3]);
+                    waterMaterial.DisableKeyword(LightingSettingsData.reflectionKeyword[4]);
                     waterMaterial.SetInt(LightingSettingsData.MarchingStepsID, lightingSettingsData.marchingSetps);
                     break;
                 case ReflectionType.SSPR:
@@ -200,7 +211,8 @@ namespace WaterSystem
                     waterMaterial.DisableKeyword(LightingSettingsData.reflectionKeyword[0]);
                     waterMaterial.DisableKeyword(LightingSettingsData.reflectionKeyword[1]);
                     waterMaterial.DisableKeyword(LightingSettingsData.reflectionKeyword[2]);
-                    waterMaterial.EnableKeyword(LightingSettingsData.reflectionKeyword[3]);
+                    waterMaterial.DisableKeyword(LightingSettingsData.reflectionKeyword[3]);
+                    waterMaterial.EnableKeyword(LightingSettingsData.reflectionKeyword[4]);
                     break;
                 default:
                     break;

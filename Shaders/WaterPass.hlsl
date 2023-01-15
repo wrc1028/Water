@@ -74,7 +74,9 @@ half4 WaterFragment(Varyings input) : SV_Target
 #elif defined(REFLECTION_SSSR)
     reflectColor = SampleSimpleSSR(inputDatas, half2(_RegionSize, _RegionSizeAdjust));
 #elif defined(REFLECTION_SSR)
-
+    reflectColor = SampleSSR(inputDatas, _MarchingSteps);
+#elif defined(REFLECTION_HIZSSR)
+    reflectColor = SampleHiZSSR(inputDatas, input.positionCS.z, _MarchingSteps);
 #else
     half4 envColor = SampleEnvironmentCube(inputDatas);
     half4 ssprColor = SampleSSPRTexture(inputDatas);

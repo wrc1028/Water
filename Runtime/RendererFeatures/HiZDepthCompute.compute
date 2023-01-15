@@ -1,0 +1,102 @@
+﻿#pragma kernel Linear01Depth
+#pragma kernel HiZDepth2x2
+#pragma kernel HiZDepth2x3
+#pragma kernel HiZDepth3x2
+#pragma kernel HiZDepth3x3
+#pragma kernel CopyTexture
+
+#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
+
+float2 _TexelSize;   // min n / mip n-1
+Texture2D<float> _CameraDepthTexture;
+
+Texture2D<float> _DepthTexture;
+RWTexture2D<float> DepthResult;
+
+[numthreads(8, 8, 1)]
+void Linear01Depth (uint3 id : SV_DispatchThreadID)
+{
+    DepthResult[id.xy] = _CameraDepthTexture[id.xy];
+}
+
+
+// 分两种情况: min n 的分辨率刚好是 mip n-1的两倍(2x2取样); 或两倍多一点(3x3取样)
+// mip level n ==> mip level n-1
+// TODO: HiZ加速的SSR和剔除所取的深度值正好相反, 所以两者结合的时候, 可以生成一个RHalf的贴图
+[numthreads(8, 8, 1)]
+void HiZDepth2x2 (uint3 id : SV_DispatchThreadID)
+{
+    float depth00 = _DepthTexture[id.xy * 2]              ;
+    float depth01 = _DepthTexture[id.xy * 2 + uint2(0, 1)];
+    float depth10 = _DepthTexture[id.xy * 2 + uint2(1, 0)];
+    float depth11 = _DepthTexture[id.xy * 2 + uint2(1, 1)];
+#if UNITY_REVERSED_Z
+    DepthResult[id.xy] = max(max(depth00, depth01), max(depth10, depth11));
+#else
+    DepthResult[id.xy] = min(min(depth00, depth01), min(depth10, depth11));
+#endif
+}
+// 奇数行, 在Y方向多采样一次
+[numthreads(8, 8, 1)]
+void HiZDepth2x3 (uint3 id : SV_DispatchThreadID)
+{
+    uint2 currentID = uint2(id.x * 2, floor((id.y + 0.5) * _TexelSize.y));
+    float depth00 = _DepthTexture[currentID.xy + uint2(0,-1)];
+    float depth01 = _DepthTexture[currentID.xy]              ;
+    float depth02 = _DepthTexture[currentID.xy + uint2(0, 1)];
+    float depth10 = _DepthTexture[currentID.xy + uint2(1,-1)];
+    float depth11 = _DepthTexture[currentID.xy + uint2(1, 0)];
+    float depth12 = _DepthTexture[currentID.xy + uint2(1, 1)];
+#if UNITY_REVERSED_Z
+    DepthResult[id.xy] = max(max(max(depth00, depth10), max(depth01, depth11)), max(depth02, depth12));
+#else
+    DepthResult[id.xy] = min(min(min(depth00, depth10), min(depth01, depth11)), min(depth02, depth12));
+#endif
+}
+// 奇数列, 在X方向多采样一次
+[numthreads(8, 8, 1)]
+void HiZDepth3x2 (uint3 id : SV_DispatchThreadID)
+{
+    uint2 currentID = uint2(floor((id.x + 0.5) * _TexelSize.x), id.y * 2);
+    float depth00 = _DepthTexture[currentID.xy + uint2(-1,0)];
+    float depth10 = _DepthTexture[currentID.xy]              ;
+    float depth20 = _DepthTexture[currentID.xy + uint2(1, 0)];
+    float depth01 = _DepthTexture[currentID.xy + uint2(-1,1)];
+    float depth11 = _DepthTexture[currentID.xy + uint2(0, 1)];
+    float depth21 = _DepthTexture[currentID.xy + uint2(1, 1)];
+#if UNITY_REVERSED_Z
+    DepthResult[id.xy] = max(max(max(depth00, depth01), max(depth10, depth11)), max(depth20, depth21));
+#else
+    DepthResult[id.xy] = min(min(min(depth00, depth01), min(depth10, depth11)), min(depth20, depth21));
+#endif
+}
+// 行列都是奇数, 3x3进行采样
+[numthreads(8, 8, 1)]
+void HiZDepth3x3 (uint3 id : SV_DispatchThreadID)
+{
+    uint2 currentID = uint2(floor((id.xy + 0.5) * _TexelSize));
+    float depth00 = _DepthTexture[currentID.xy - uint2(1, 1)];
+    float depth10 = _DepthTexture[currentID.xy + uint2(0,-1)];
+    float depth20 = _DepthTexture[currentID.xy + uint2(1,-1)];
+    float depth01 = _DepthTexture[currentID.xy + uint2(-1,0)];
+    float depth11 = _DepthTexture[currentID.xy]              ;
+    float depth21 = _DepthTexture[currentID.xy + uint2(1, 0)];
+    float depth02 = _DepthTexture[currentID.xy + uint2(-1,1)];
+    float depth12 = _DepthTexture[currentID.xy + uint2(0, 1)];
+    float depth22 = _DepthTexture[currentID.xy + uint2(1, 1)];
+#if UNITY_REVERSED_Z
+    float depthA = max(max(depth00, depth10), max(depth20, depth01));
+    float depthB = max(max(depth21, depth02), max(depth12, depth22));
+    DepthResult[id.xy] = max(max(depthA, depthB), depth11);
+#else
+    float depthA = min(min(depth00, depth10), min(depth20, depth01));
+    float depthB = min(min(depth21, depth02), min(depth12, depth22));
+    DepthResult[id.xy] = min(min(depthA, depthB), depth11);
+#endif
+}
+
+[numthreads(8, 8, 1)]
+void CopyTexture (uint3 id : SV_DispatchThreadID)
+{
+    DepthResult[id.xy] = _DepthTexture[id.xy];
+}

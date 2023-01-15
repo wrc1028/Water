@@ -57,6 +57,10 @@ namespace WaterSystem
                 case ReflectionType.SSR:
                     settingsData.marchingSetps = EditorGUILayout.IntSlider("步进次数", settingsData.marchingSetps, 16, 128);
                     break;
+                case ReflectionType.HIZSSR:
+                    settingsData.marchingSetps = EditorGUILayout.IntSlider("步进次数", settingsData.marchingSetps, 16, 128);
+                    settingsData.startMipLevel = EditorGUILayout.IntSlider("起始层级", settingsData.startMipLevel, 0, 8);
+                    break;
                 case ReflectionType.SSPR:
                 case ReflectionType.PR:
                     settingsData.reflectionDistorted = EditorGUILayout.Slider("反射扭曲强度", settingsData.reflectionDistorted, 0, 2.0f);
